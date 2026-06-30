@@ -1,0 +1,44 @@
+# LaTeX auxiliary files
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+*.lb
+
+# Bibliography
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.run.xml
+
+# Beamer presentation-specific
+*.nav
+*.pre
+*.snm
+*.vrb
+
+# Synctex (TexStudio editor sync)
+*.synctex.gz
+*.synctex.gz(busy)
+*.synctex(busy)
+*.pdfsync
+
+# Latexmk
+*.fdb_latexmk
+*.fls
+
+# Temp/build folders (if TexStudio uses one)
+build/
+out/
+
+# Keep the PDF and source
+!*.tex
+!*.pdf
