@@ -1,0 +1,9 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{GSWConfig}\PYG{p}{:}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This class implements the GSW Config. It takes the RLWE config, as most of the configurations are identical. Additionally, it also takes gsw\PYGZus{}p, which will be used for the base p representation.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{rlwecfg}\PYG{p}{:} \PYG{n}{RLWEConfig}\PYG{p}{,} \PYG{n}{gsw\PYGZus{}p}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{):}
+		\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{rwlecfg} \PYG{o}{=} \PYG{n}{rlwecfg}
+		\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{gsw\PYGZus{}p} \PYG{o}{=} \PYG{n}{gsw\PYGZus{}p}
+\end{MintedVerbatim}

@@ -1,0 +1,13 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{get\PYGZus{}trivial\PYGZus{}rlwe\PYGZus{}ciphertext}\PYG{p}{(}\PYG{n}{mx}\PYG{p}{:} \PYG{n}{Polynomial}\PYG{p}{,} \PYG{n}{config}\PYG{p}{:} \PYG{n}{RLWEConfig}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function returns the trivial RLWE ciphertext for the given config. Trivial RLWE ciphertext is basically just an RLWE ciphertext where a is just a zero polynomial and b is polynomial itself.}
+\PYG{l+s+sd}{	NOTE: Im not very sure if we should encode the input polynomial, meaning, if we take a cleartext input or plaintext input.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{c+c1}{\PYGZsh{} sanity check}
+	\PYG{k}{if} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{mx}\PYG{o}{.}\PYG{n}{coeffs}\PYG{p}{)} \PYG{o}{!=} \PYG{n}{config}\PYG{o}{.}\PYG{n}{N}\PYG{p}{:}
+	\PYG{k}{raise} \PYG{n+ne}{ValueError}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}The polynomial has a degree thats different from the degree provided in the config file. Please ensure that theyre the same.\PYGZdq{}}\PYG{p}{)}
+	\PYG{c+c1}{\PYGZsh{} creating a}
+	\PYG{n}{a} \PYG{o}{=} \PYG{n}{make\PYGZus{}zero\PYGZus{}polynomial}\PYG{p}{(}\PYG{n}{config}\PYG{o}{.}\PYG{n}{N}\PYG{p}{)}
+	\PYG{k}{return} \PYG{n}{RLWECiphertext}\PYG{p}{(}\PYG{n}{a} \PYG{o}{=} \PYG{n}{a}\PYG{p}{,} \PYG{n}{b} \PYG{o}{=} \PYG{n}{mx}\PYG{p}{,} \PYG{n}{config}\PYG{o}{=}\PYG{n}{config}\PYG{p}{)}
+\end{MintedVerbatim}

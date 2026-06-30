@@ -1,0 +1,23 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{decode\PYGZus{}coeff}\PYG{p}{(}\PYG{n}{c}\PYG{p}{,} \PYG{n}{delta}\PYG{p}{,} \PYG{n}{p}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function decodes a specific coefficient within the polynomial.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{c+c1}{\PYGZsh{} divide by delta and round}
+	\PYG{n}{decoded\PYGZus{}c} \PYG{o}{=} \PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{rint}\PYG{p}{(}\PYG{n}{c}\PYG{o}{/}\PYG{n}{delta}\PYG{p}{))}
+	\PYG{c+c1}{\PYGZsh{} calculate decoded\PYGZus{}c mod p and you get the final decoded value}
+	\PYG{n}{out} \PYG{o}{=} \PYG{p}{((}\PYG{n}{decoded\PYGZus{}c} \PYG{o}{+} \PYG{p}{(}\PYG{n}{p}\PYG{o}{//}\PYG{l+m+mi}{2}\PYG{p}{))} \PYG{o}{\PYGZpc{}} \PYG{n}{p}\PYG{p}{)} \PYG{o}{\PYGZhy{}} \PYG{p}{(}\PYG{n}{p}\PYG{o}{//}\PYG{l+m+mi}{2}\PYG{p}{)}
+	\PYG{k}{return} \PYG{n}{out}
+	
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{decode\PYGZus{}rlwe}\PYG{p}{(}\PYG{n}{p}\PYG{p}{:} \PYG{n}{Polynomial}\PYG{p}{,} \PYG{n}{config}\PYG{p}{:} \PYG{n}{RLWEConfig}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function decodes the given polynomial to remove the noise and get the final decrypted cleartext.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{c+c1}{\PYGZsh{} calcualte the delta}
+	\PYG{n}{delta} \PYG{o}{=} \PYG{n}{config}\PYG{o}{.}\PYG{n}{q}\PYG{o}{//}\PYG{n}{config}\PYG{o}{.}\PYG{n}{p}
+	\PYG{n}{raw\PYGZus{}coeffs} \PYG{o}{=} \PYG{n}{p}\PYG{o}{.}\PYG{n}{coeffs}
+	\PYG{c+c1}{\PYGZsh{} decoded each coeff and get the output polynomial}
+	\PYG{n}{decoded\PYGZus{}coeffs} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{([}\PYG{n}{decode\PYGZus{}coeff}\PYG{p}{(}\PYG{n}{c}\PYG{p}{,} \PYG{n}{delta}\PYG{p}{,}\PYG{n}{config}\PYG{o}{.}\PYG{n}{p}\PYG{p}{)} \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n}{raw\PYGZus{}coeffs}\PYG{p}{])}
+	
+	\PYG{k}{return} \PYG{n}{Polynomial}\PYG{p}{(}\PYG{n}{config}\PYG{o}{.}\PYG{n}{N}\PYG{p}{,} \PYG{n}{decoded\PYGZus{}coeffs}\PYG{p}{)}
+\end{MintedVerbatim}

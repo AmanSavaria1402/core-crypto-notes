@@ -1,0 +1,15 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{create\PYGZus{}trivial\PYGZus{}rlwe\PYGZus{}ciphertext}\PYG{p}{(}\PYG{n}{mx}\PYG{p}{:} \PYG{n}{Polynomial}\PYG{p}{,} \PYG{n}{config}\PYG{p}{:} \PYG{n}{RLWEConfig}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function creates a trivial RLWE ciphertext. A trivial RLWE ciphertext is one where the polynomial is one where b is the polynomial itself while a is a zero polynomial.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{n}{a} \PYG{o}{=} \PYG{n}{make\PYGZus{}zero\PYGZus{}polynomial}\PYG{p}{(}\PYG{n}{config}\PYG{o}{.}\PYG{n}{N}\PYG{p}{)}
+	\PYG{k}{return} \PYG{n}{RLWECiphertext}\PYG{p}{(}\PYG{n}{a}\PYG{p}{,} \PYG{n}{mx}\PYG{p}{,} \PYG{n}{config}\PYG{p}{)}
+	
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{create\PYGZus{}trivial\PYGZus{}lwe\PYGZus{}ciphertext}\PYG{p}{(}\PYG{n}{m}\PYG{p}{:} \PYG{n}{LWEPlaintext}\PYG{p}{,} \PYG{n}{config}\PYG{p}{:} \PYG{n}{LWEConfig}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function creates a trivial LWE ciphertext, which is an LWECiphertext with a being a vector of zeros and b being the plaintext itself.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{n}{a} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{n}{config}\PYG{o}{.}\PYG{n}{n}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+	\PYG{k}{return} \PYG{n}{LWECiphertext}\PYG{p}{(}\PYG{n}{a}\PYG{p}{,} \PYG{n}{m}\PYG{o}{.}\PYG{n}{m}\PYG{p}{)}
+\end{MintedVerbatim}

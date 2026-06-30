@@ -1,0 +1,9 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{GSWCiphertext}\PYG{p}{:}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This class implements the gsw ciphertext.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{config}\PYG{p}{:} \PYG{n}{GSWConfig}\PYG{p}{,} \PYG{n}{polys}\PYG{p}{:} \PYG{n}{Sequence}\PYG{p}{[}\PYG{n}{RLWECiphertext}\PYG{p}{]):}
+		\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config} \PYG{o}{=} \PYG{n}{config}
+		\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{polys} \PYG{o}{=} \PYG{n}{polys}
+\end{MintedVerbatim}

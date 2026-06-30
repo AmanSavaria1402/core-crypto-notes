@@ -1,0 +1,16 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{homomorphic\PYGZus{}nand}\PYG{p}{(}\PYG{n}{b0}\PYG{p}{:} \PYG{n}{LWECiphertext}\PYG{p}{,} \PYG{n}{b1}\PYG{p}{:} \PYG{n}{LWECiphertext}\PYG{p}{,} \PYG{n}{constCipher}\PYG{p}{:} \PYG{n}{LWECiphertext}\PYG{p}{,} \PYG{n}{scale\PYGZus{}lwe}\PYG{p}{:} \PYG{n}{LWECiphertext}\PYG{p}{,} \PYG{n}{txR}\PYG{p}{:}\PYG{n}{RLWECiphertext}\PYG{p}{,} \PYG{n}{bsk}\PYG{p}{:}\PYG{n}{BootstrapKey}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{LWECiphertext}\PYG{p}{:}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function implements the nand operation between two inputs b0 and b1 homomorphically.}
+\PYG{l+s+sd}{	The way it does it is by first evaluating the value of F(b0, b1) = LWE(\PYGZhy{}3) \PYGZhy{} b0 \PYGZhy{} b1 and then running the bootstrap that implements the step function which evaluates the final nand function.}
+\PYG{l+s+sd}{	Remember that 0 is equivalent to F while 2 is equivalent to T here. The output will be an LWE ciphertext encrypting 0 or 2 as well.}
+\PYG{l+s+sd}{	constCipher is just the LWE Encryption of \PYGZhy{}3.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{c+c1}{\PYGZsh{} calculating constCipher \PYGZhy{} b0 \PYGZhy{} b1}
+	\PYG{n}{cc\PYGZus{}minus\PYGZus{}b0} \PYG{o}{=} \PYG{n}{constCipher}\PYG{o}{.}\PYG{n}{sub\PYGZus{}ciphertext}\PYG{p}{(}\PYG{n}{b0}\PYG{p}{)}
+	\PYG{n}{F\PYGZus{}lwe} \PYG{o}{=} \PYG{n}{cc\PYGZus{}minus\PYGZus{}b0}\PYG{o}{.}\PYG{n}{sub\PYGZus{}ciphertext}\PYG{p}{(}\PYG{n}{b1}\PYG{p}{)}
+	\PYG{c+c1}{\PYGZsh{} call bootstrapping on this}
+	\PYG{n}{nand\PYGZus{}lwe} \PYG{o}{=} \PYG{n}{bootstrap}\PYG{p}{(}\PYG{n}{F\PYGZus{}lwe}\PYG{p}{,} \PYG{n}{bsk}\PYG{p}{,} \PYG{n}{txR}\PYG{p}{,} \PYG{n}{scale\PYGZus{}lwe}\PYG{p}{)}
+	
+	\PYG{k}{return} \PYG{n}{nand\PYGZus{}lwe}
+\end{MintedVerbatim}

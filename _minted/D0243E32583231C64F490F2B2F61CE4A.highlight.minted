@@ -1,0 +1,35 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{ciphertext\PYGZus{}multiplication}\PYG{p}{(}\PYG{n}{G}\PYG{p}{:} \PYG{n}{GSWCiphertext}\PYG{p}{,} \PYG{n}{R}\PYG{p}{:} \PYG{n}{RLWECiphertext}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{RLWECiphertext}\PYG{p}{:}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function performs the ciphertext\PYGZhy{}ciphertext multiplication between G and R. G is of shape (2k, 2), basically 2k RLWE Ciphertexts and each Rlwe ciphertext is (a, b).}
+\PYG{l+s+sd}{	So a little explanation because this function looks a little confusing (but in reality it really isnt once you look at it hard enough keeping in mind how the multiplication is actually done). Im going to define in the docstring how does this operation actually works.}
+\PYG{l+s+sd}{	So:}
+\PYG{l+s+sd}{	First, G is a series of 2k RLWECiphertexts. Essentially, theyre all zero ciphertexts to which fx (the polynomial with which we actually want to achieve multiplication with R) is added. For the first half of G [0:k\PYGZhy{}1], fx is added to a(x) of each RLWE \PYGZsq{}row\PYGZsq{}, and is added to b(x) for the second half [k: 2k\PYGZhy{}1].}
+\PYG{l+s+sd}{	Second, a(x) and b(x) of R are converted to corresponding base\PYGZhy{}p representation. Now R was basically a vector/sequence/whatever of 2 polynomials, but now it becomes a vector of 2k polynomials (k polynomials for base p representation of a(x) and b(x)).}
+\PYG{l+s+sd}{	To perform c\PYGZhy{}c multiplication, you basically do something akin to matrix multiplication, (Basep(a(x)), Basep(b(x))) @ G, which gives you a single rlwe polynomial, and its shape will be (1, 2), a single (a(x), b(x)) ciphertext. Here, each multiplication is polynomial multiplication followed by polynomial addition for matmul.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{n}{gsw\PYGZus{}config} \PYG{o}{=} \PYG{n}{G}\PYG{o}{.}\PYG{n}{config}
+	\PYG{n}{rlwe\PYGZus{}config} \PYG{o}{=} \PYG{n}{R}\PYG{o}{.}\PYG{n}{config}
+	\PYG{c+c1}{\PYGZsh{} first get the base p representation for R, for both a(x) and b(x) and create it into a sequence of 2k polynomials}
+	\PYG{n}{R\PYGZus{}base\PYGZus{}p\PYGZus{}repr} \PYG{o}{=} \PYG{n}{get\PYGZus{}base\PYGZus{}p\PYGZus{}from\PYGZus{}polynomial}\PYG{p}{(}\PYG{n}{R}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{p}\PYG{o}{=}\PYG{n}{gsw\PYGZus{}config}\PYG{o}{.}\PYG{n}{gsw\PYGZus{}p}\PYG{p}{,} \PYG{n}{q}\PYG{o}{=}\PYG{n}{rlwe\PYGZus{}config}\PYG{o}{.}\PYG{n}{q}\PYG{p}{)} \PYG{o}{+} \PYG{n}{get\PYGZus{}base\PYGZus{}p\PYGZus{}from\PYGZus{}polynomial}\PYG{p}{(}\PYG{n}{R}\PYG{o}{.}\PYG{n}{b}\PYG{p}{,} \PYG{n}{p}\PYG{o}{=}\PYG{n}{gsw\PYGZus{}config}\PYG{o}{.}\PYG{n}{gsw\PYGZus{}p}\PYG{p}{,} \PYG{n}{q}\PYG{o}{=}\PYG{n}{rlwe\PYGZus{}config}\PYG{o}{.}\PYG{n}{q}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} the output of the function is a list so + just appends}
+	
+	\PYG{c+c1}{\PYGZsh{} so matmul here is implemented using a for loop, first, an RLWECiphertext that is basically all zeros is initialized and then the corresponding products a.G and b.G for each R\PYGZus{}base\PYGZus{}p\PYGZus{}repr is added to a and be of this new RLWECiphertext respectively}
+	\PYG{n}{res\PYGZus{}rlwe\PYGZus{}cipher} \PYG{o}{=} \PYG{n}{RLWECiphertext}\PYG{p}{(}
+		\PYG{n}{config} \PYG{o}{=} \PYG{n}{rlwe\PYGZus{}config}\PYG{p}{,}
+		\PYG{n}{a} \PYG{o}{=} \PYG{n}{make\PYGZus{}zero\PYGZus{}polynomial}\PYG{p}{(}\PYG{n}{rlwe\PYGZus{}config}\PYG{o}{.}\PYG{n}{N}\PYG{p}{),}
+		\PYG{n}{b} \PYG{o}{=} \PYG{n}{make\PYGZus{}zero\PYGZus{}polynomial}\PYG{p}{(}\PYG{n}{rlwe\PYGZus{}config}\PYG{o}{.}\PYG{n}{N}\PYG{p}{)}
+	\PYG{p}{)}
+	
+	\PYG{k}{for} \PYG{n}{i}\PYG{p}{,} \PYG{n}{rp} \PYG{o+ow}{in} \PYG{n+nb}{enumerate}\PYG{p}{(}\PYG{n}{R\PYGZus{}base\PYGZus{}p\PYGZus{}repr}\PYG{p}{):}
+		\PYG{c+c1}{\PYGZsh{} multiply the current r to both a and b of the current row of g.a}
+		\PYG{n}{a\PYGZus{}mul} \PYG{o}{=} \PYG{n}{rp}\PYG{o}{.}\PYG{n}{polynomial\PYGZus{}multiply}\PYG{p}{(}\PYG{n}{G}\PYG{o}{.}\PYG{n}{polys}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{o}{.}\PYG{n}{a}\PYG{p}{)}
+		\PYG{c+c1}{\PYGZsh{} adding}
+		\PYG{n}{res\PYGZus{}rlwe\PYGZus{}cipher}\PYG{o}{.}\PYG{n}{a} \PYG{o}{=} \PYG{n}{res\PYGZus{}rlwe\PYGZus{}cipher}\PYG{o}{.}\PYG{n}{a}\PYG{o}{.}\PYG{n}{polynomial\PYGZus{}add}\PYG{p}{(}\PYG{n}{a\PYGZus{}mul}\PYG{p}{)}
+		
+		\PYG{c+c1}{\PYGZsh{} doing the same for b}
+		\PYG{n}{b\PYGZus{}mul} \PYG{o}{=} \PYG{n}{rp}\PYG{o}{.}\PYG{n}{polynomial\PYGZus{}multiply}\PYG{p}{(}\PYG{n}{G}\PYG{o}{.}\PYG{n}{polys}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{o}{.}\PYG{n}{b}\PYG{p}{)}
+		\PYG{c+c1}{\PYGZsh{} adding}
+		\PYG{n}{res\PYGZus{}rlwe\PYGZus{}cipher}\PYG{o}{.}\PYG{n}{b} \PYG{o}{=} \PYG{n}{res\PYGZus{}rlwe\PYGZus{}cipher}\PYG{o}{.}\PYG{n}{b}\PYG{o}{.}\PYG{n}{polynomial\PYGZus{}add}\PYG{p}{(}\PYG{n}{b\PYGZus{}mul}\PYG{p}{)}
+	
+	\PYG{k}{return} \PYG{n}{res\PYGZus{}rlwe\PYGZus{}cipher}
+\end{MintedVerbatim}

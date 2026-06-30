@@ -1,0 +1,14 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{lwe\PYGZus{}to\PYGZus{}rlwe\PYGZus{}key}\PYG{p}{(}\PYG{n}{lwe\PYGZus{}key}\PYG{p}{:} \PYG{n}{LWEEncryptionKey}\PYG{p}{,} \PYG{n}{config}\PYG{p}{:} \PYG{n}{RLWEConfig}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function creates an RLWE key for/from the given RLWE key.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{c+c1}{\PYGZsh{} creating a polynomial with the coeffs as the lwe\PYGZus{}key}
+	\PYG{k}{if} \PYG{n}{lwe\PYGZus{}key}\PYG{o}{.}\PYG{n}{config}\PYG{o}{.}\PYG{n}{n} \PYG{o}{!=} \PYG{n}{config}\PYG{o}{.}\PYG{n}{N}\PYG{p}{:}
+	\PYG{k}{raise} \PYG{n+ne}{ValueError}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}The size of LWEKey and degree of RLWEConfig do not match.\PYGZdq{}}\PYG{p}{)}
+	\PYG{n}{key\PYGZus{}poly} \PYG{o}{=} \PYG{n}{Polynomial}\PYG{p}{(}\PYG{n}{N}\PYG{o}{=}\PYG{n}{config}\PYG{o}{.}\PYG{n}{N}\PYG{p}{,} \PYG{n}{coeffs}\PYG{o}{=}\PYG{n}{lwe\PYGZus{}key}\PYG{o}{.}\PYG{n}{key}\PYG{p}{)}
+	\PYG{n}{rlwe\PYGZus{}key} \PYG{o}{=} \PYG{n}{RLWEEncryptionKey}\PYG{p}{(}\PYG{n}{config}\PYG{o}{=}\PYG{n}{config}\PYG{p}{)}
+	\PYG{n}{rlwe\PYGZus{}key}\PYG{o}{.}\PYG{n}{key} \PYG{o}{=} \PYG{n}{key\PYGZus{}poly}
+	
+	\PYG{k}{return} \PYG{n}{rlwe\PYGZus{}key}
+\end{MintedVerbatim}

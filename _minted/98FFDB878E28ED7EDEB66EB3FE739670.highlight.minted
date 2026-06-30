@@ -1,0 +1,17 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{LWEConfig}\PYG{p}{:}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This class defines the configurations for encryption}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{p}\PYG{p}{,} \PYG{n}{q}\PYG{p}{,} \PYG{n}{noise\PYGZus{}level}\PYG{p}{,} \PYG{n}{dimension}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	p: plaintext modulus}
+\PYG{l+s+sd}{	q: ciphertext modulus}
+\PYG{l+s+sd}{	noise\PYGZus{}level: The noise level (used as standard deviation for generating the noise)}
+\PYG{l+s+sd}{	dimension: m (number of elements in the sk)}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{p} \PYG{o}{=} \PYG{n}{p}
+	\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{q} \PYG{o}{=} \PYG{n}{q}
+	\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{sigma} \PYG{o}{=} \PYG{n}{noise\PYGZus{}level}
+	\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{n} \PYG{o}{=} \PYG{n}{dimension}
+\end{MintedVerbatim}

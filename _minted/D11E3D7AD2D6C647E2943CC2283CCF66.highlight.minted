@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{get\PYGZus{}k}\PYG{p}{(}\PYG{n}{q}\PYG{p}{,} \PYG{n}{p}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	Given q (ciphertext modulus) and p (not plaintext modulus, but a different parameter specifically for base p representation used for ciphertext\PYGZhy{}ciphertext multiplication of an RLWE and GWE cipherterxts), get the value of k, which is the sequence length of base\PYGZhy{}p representation of any input.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{k}{return} \PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{log2}\PYG{p}{(}\PYG{n}{q}\PYG{p}{)}\PYG{o}{/}\PYG{n}{np}\PYG{o}{.}\PYG{n}{log2}\PYG{p}{(}\PYG{n}{p}\PYG{p}{))}
+\end{MintedVerbatim}

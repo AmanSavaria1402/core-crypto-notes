@@ -1,0 +1,32 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} RLWECiphertext Code...}
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{add\PYGZus{}ciphertext}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{other}\PYG{p}{:} \PYG{n}{RLWECiphertext}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		Add another ciphertext \PYGZlt{}other\PYGZgt{} to the current ciphertext and return the result as a new ciphertext. Two add two ciphertexts, you just add their respective a and b polynomials.}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{c+c1}{\PYGZsh{} adding a and b, and creating a new ciphertext}
+		\PYG{n}{added\PYGZus{}a} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{a}\PYG{o}{.}\PYG{n}{polynomial\PYGZus{}add}\PYG{p}{(}\PYG{n}{other}\PYG{o}{.}\PYG{n}{a}\PYG{p}{)}
+		\PYG{n}{added\PYGZus{}b} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{b}\PYG{o}{.}\PYG{n}{polynomial\PYGZus{}add}\PYG{p}{(}\PYG{n}{other}\PYG{o}{.}\PYG{n}{b}\PYG{p}{)}
+		
+		\PYG{k}{return} \PYG{n}{RLWECiphertext}\PYG{p}{(}\PYG{n}{added\PYGZus{}a}\PYG{p}{,} \PYG{n}{added\PYGZus{}b}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{p}{)}
+		
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{sub\PYGZus{}ciphertext}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{other}\PYG{p}{:} \PYG{n}{RLWECiphertext}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		Subtract another ciphertext \PYGZlt{}other\PYGZgt{} from the current one and return the result as a new ciphertext. This operation subtracts \PYGZlt{}other\PYGZgt{} from the \PYGZlt{}self\PYGZgt{} and not the other way round.}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{c+c1}{\PYGZsh{} subtracting a and b and returning a new ciphertext}
+		\PYG{n}{subbed\PYGZus{}a} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{a}\PYG{o}{.}\PYG{n}{polynomial\PYGZus{}subtract}\PYG{p}{(}\PYG{n}{other}\PYG{o}{.}\PYG{n}{a}\PYG{p}{)}
+		\PYG{n}{subbed\PYGZus{}b} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{b}\PYG{o}{.}\PYG{n}{polynomial\PYGZus{}subtract}\PYG{p}{(}\PYG{n}{other}\PYG{o}{.}\PYG{n}{b}\PYG{p}{)}
+		
+		\PYG{k}{return} \PYG{n}{RLWECiphertext}\PYG{p}{(}\PYG{n}{subbed\PYGZus{}a}\PYG{p}{,} \PYG{n}{subbed\PYGZus{}b}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{p}{)}
+	
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{mul\PYGZus{}plaintext}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{cx}\PYG{p}{:} \PYG{n}{RLWEPlaintext}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		This function multiplys the given plaintext to self and returns the product as a new ciphertext.}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{c+c1}{\PYGZsh{} for this, you multiply both a and b with the plaintext}
+		\PYG{n}{mul\PYGZus{}a} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{a}\PYG{o}{.}\PYG{n}{polynomial\PYGZus{}multiply}\PYG{p}{(}\PYG{n}{cx}\PYG{o}{.}\PYG{n}{p}\PYG{p}{)}
+		\PYG{n}{mul\PYGZus{}b} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{b}\PYG{o}{.}\PYG{n}{polynomial\PYGZus{}multiply}\PYG{p}{(}\PYG{n}{cx}\PYG{o}{.}\PYG{n}{p}\PYG{p}{)}
+		
+		\PYG{k}{return} \PYG{n}{RLWECiphertext}\PYG{p}{(}\PYG{n}{mul\PYGZus{}a}\PYG{p}{,} \PYG{n}{mul\PYGZus{}b}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{p}{)}
+\end{MintedVerbatim}

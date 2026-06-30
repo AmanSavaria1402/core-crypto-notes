@@ -1,0 +1,25 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} BootstrapKey Class...}
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{blindrotate}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{FX}\PYG{p}{:} \PYG{n}{RLWECiphertext}\PYG{p}{,} \PYG{n}{I}\PYG{p}{:} \PYG{n}{LWECiphertext}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{RLWECiphertext}\PYG{p}{:}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		This function implements the Rotate(I, FX) function homomorphically. This function, given i, and a polynomial f(x) (I = LWE(i), FX = RLWE(f(x)), calculates x\PYGZca{}i . f(x) as an RLWECiphertext.}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{c+c1}{\PYGZsh{} scale the lwe ciphertext}
+		\PYG{n}{scaled\PYGZus{}I\PYGZus{}a} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{rint}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{multiply}\PYG{p}{(}\PYG{n}{I}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{p}{((}\PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{o}{.}\PYG{n}{rwlecfg}\PYG{o}{.}\PYG{n}{N}\PYG{p}{)}\PYG{o}{/} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{o}{.}\PYG{n}{rwlecfg}\PYG{o}{.}\PYG{n}{q}\PYG{p}{))))}
+		\PYG{n}{scaled\PYGZus{}I\PYGZus{}b} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{rint}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{multiply}\PYG{p}{(}\PYG{n}{I}\PYG{o}{.}\PYG{n}{b}\PYG{p}{,} \PYG{p}{((}\PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{o}{.}\PYG{n}{rwlecfg}\PYG{o}{.}\PYG{n}{N}\PYG{p}{)}\PYG{o}{/} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{o}{.}\PYG{n}{rwlecfg}\PYG{o}{.}\PYG{n}{q}\PYG{p}{))))} \PYG{c+c1}{\PYGZsh{} NOTE: This is going to be a constant since this is an LWE ciphertext}
+		
+		\PYG{c+c1}{\PYGZsh{} rotate operation}
+		\PYG{c+c1}{\PYGZsh{} initialize g0}
+		\PYG{n}{xb\PYGZus{}poly} \PYG{o}{=} \PYG{n}{build\PYGZus{}monomial}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{o}{.}\PYG{n}{rwlecfg}\PYG{o}{.}\PYG{n}{N}\PYG{p}{,} \PYG{n}{scaled\PYGZus{}I\PYGZus{}b}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{)}
+		\PYG{n}{xb\PYGZus{}plain} \PYG{o}{=} \PYG{n}{RLWEPlaintext}\PYG{p}{(}\PYG{n}{xb\PYGZus{}poly}\PYG{p}{,} \PYG{n}{FX}\PYG{o}{.}\PYG{n}{config}\PYG{p}{)}
+		\PYG{n}{rotated\PYGZus{}poly} \PYG{o}{=} \PYG{n}{FX}\PYG{o}{.}\PYG{n}{mul\PYGZus{}plaintext}\PYG{p}{(}\PYG{n}{xb\PYGZus{}plain}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} this will updated every timestep}
+		\PYG{c+c1}{\PYGZsh{} loop N times to finally get the rotated output}
+		\PYG{k}{for} \PYG{n}{i}\PYG{p}{,} \PYG{n}{ai} \PYG{o+ow}{in} \PYG{n+nb}{enumerate}\PYG{p}{(}\PYG{n}{scaled\PYGZus{}I\PYGZus{}a}\PYG{p}{):}
+			\PYG{c+c1}{\PYGZsh{} get g\PYGZus{}i\PYGZhy{}1 (x) * x\PYGZca{}a\PYGZus{}i}
+			\PYG{n}{poly} \PYG{o}{=} \PYG{n}{RLWEPlaintext}\PYG{p}{(}\PYG{n}{build\PYGZus{}monomial}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{o}{.}\PYG{n}{rwlecfg}\PYG{o}{.}\PYG{n}{N}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{n}{ai}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{),} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{o}{.}\PYG{n}{rwlecfg}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} just converting it to a plaintext because the plaintext multiply in RLWE wants a plaintext}
+			\PYG{n}{right} \PYG{o}{=} \PYG{n}{rotated\PYGZus{}poly}\PYG{o}{.}\PYG{n}{mul\PYGZus{}plaintext}\PYG{p}{(}\PYG{n}{poly}\PYG{p}{)}
+			\PYG{c+c1}{\PYGZsh{} update rotated\PYGZus{}poly using the cmux operation}
+			\PYG{n}{rotated\PYGZus{}poly} \PYG{o}{=} \PYG{n}{cmux}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{key}\PYG{p}{[}\PYG{n}{i}\PYG{p}{],} \PYG{n}{rotated\PYGZus{}poly}\PYG{p}{,} \PYG{n}{right}\PYG{p}{)}
+		
+		\PYG{k}{return} \PYG{n}{rotated\PYGZus{}poly}
+\end{MintedVerbatim}

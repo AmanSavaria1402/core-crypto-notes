@@ -1,0 +1,29 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{decode\PYGZus{}plaintext}\PYG{p}{(}\PYG{n}{m}\PYG{p}{,} \PYG{n}{config}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function decodes the decrypted plaintext to remove the noise and get the final output}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{c+c1}{\PYGZsh{} get the delta}
+	\PYG{n}{delta} \PYG{o}{=} \PYG{n}{config}\PYG{o}{.}\PYG{n}{q}\PYG{o}{/}\PYG{n}{config}\PYG{o}{.}\PYG{n}{p}
+	\PYG{c+c1}{\PYGZsh{} round to remove the noise}
+	\PYG{n}{decoded} \PYG{o}{=} \PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{rint}\PYG{p}{(}\PYG{n}{m}\PYG{o}{/}\PYG{n}{delta}\PYG{p}{))}
+	\PYG{c+c1}{\PYGZsh{} need to take a mod wrt p centered around 0 to get the final output}
+	\PYG{n}{final} \PYG{o}{=} \PYG{p}{((}\PYG{n}{decoded} \PYG{o}{+} \PYG{p}{(}\PYG{n}{config}\PYG{o}{.}\PYG{n}{p}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{))} \PYG{o}{\PYGZpc{}} \PYG{n}{config}\PYG{o}{.}\PYG{n}{p}\PYG{p}{)} \PYG{o}{\PYGZhy{}} \PYG{p}{(}\PYG{n}{config}\PYG{o}{.}\PYG{n}{p}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{)}
+	\PYG{k}{return} \PYG{n}{final}
+	
+\PYG{c+c1}{\PYGZsh{} LWEEncryptionKey Class}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{decrypt}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{cipher}\PYG{p}{:}\PYG{n}{LWECiphertext}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		This function decrypts the ciphertext generated using the same secret key.}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{n}{b} \PYG{o}{=} \PYG{n}{cipher}\PYG{o}{.}\PYG{n}{b}
+		\PYG{n}{a} \PYG{o}{=} \PYG{n}{cipher}\PYG{o}{.}\PYG{n}{a}
+		
+		\PYG{n}{inter} \PYG{o}{=} \PYG{n}{b} \PYG{o}{\PYGZhy{}} \PYG{n}{np}\PYG{o}{.}\PYG{n}{dot}\PYG{p}{(}\PYG{n}{a}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{key}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} gives m + e, and not just m}
+		\PYG{c+c1}{\PYGZsh{} return LWEPlaintext(inter)}
+		
+		\PYG{c+c1}{\PYGZsh{} round and get the final decrypted output}
+		\PYG{n}{final} \PYG{o}{=} \PYG{n}{decode\PYGZus{}plaintext}\PYG{p}{(}\PYG{n}{inter}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{p}{)}
+		
+		\PYG{k}{return} \PYG{n}{LWEPlaintext}\PYG{p}{(}\PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{final}\PYG{p}{))}
+\end{MintedVerbatim}

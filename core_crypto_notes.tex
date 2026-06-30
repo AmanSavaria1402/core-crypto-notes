@@ -6,6 +6,8 @@
 \usepackage{float}
 \usepackage{listings}
 \usepackage{caption}
+\usepackage{minted}
+\setminted{breaklines, breakanywhere}
 \usepackage[
     top=1in,
     bottom=1in,
@@ -13,6 +15,8 @@
     right=0.7in
     ]{geometry}
 
+\usepackage{xcolor}
+\definecolor{bg}{rgb}{0.97,0.97,0.97}
 
 \title{\Huge \textbf{TFHE Notes}}
 \author{\hspace{5cm }- Aman Savaria}
@@ -47,13 +51,134 @@ Now the way this noise \textit{e} is actually created is:
   \item You scale this sampled value. You want to bring it from where it is (very close to 0) to somewhere thats comparable to q (because that is where the ciphertext 'lives'). Basically, you want \textit{e} to be in the range $[\frac{-q}{2}, \frac{q}{2}]$. Note that it shouldnt go beyond this range because then the magintude of the noise becomes too large to get an accurate/correct decryption.
   \item Now to do the above, you basically do this: $e = \lfloor \frac{q}{2} \cdot x \rceil$
 \end{itemize}
+\textbf{Code to create noise:}
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def generate_normal_sample(config: LWEConfig):
+	'''
+	This function generates the normal sample required for encryption within the given range. Since this is LWE, we only need 1 element here as m = 1.
+	'''
+	ei = np.int32(np.random.normal(loc=0.0, scale=config.sigma) * (config.q//2))
+	return ei
+\end{minted}
+
+\textbf{Code to create the vector a.}
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def generate_uniform_sample(config: LWEConfig):
+	'''
+	Generate an array of {size} elements using a uniform random distribution in the required range
+	'''
+	# get the limits
+	low = (config.q//2) * -1
+	high = (config.q//2) # not subtracting -1 because high is exclusive in random.randint
+	# get the random array
+	a = np.random.randint(low=low, high=high, size=config.n, dtype=np.int32)
+	return a
+\end{minted}
+
+\textbf{Code for LWE Encryption key}
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+class LWEEncryptionKey:
+	'''
+	This class implements the LWEEncryption key. The encryption key implements creating the key, which is just a random binary vector or n elements and encrypting a ciphertext form a plaintext.
+	'''
+
+	def __init__(self, config:LWEConfig):
+		self.config = config
+		self.key = np.ndarray # this just initializes key to be an array, which will be then populated
+
+	def generate_key(self):
+		'''
+		This function generates the secret key.
+		'''
+		self.key = np.random.randint(low=0, high=2, size=self.config.n)
+	...
+\end{minted}
 
 Now the core idea behind encryption is that you basically add noise so large to the original message that it basically overshadows the actualy message. For this to happen, you want your q to be large. To achieve this, you need to limit the range of messages. You basically define an integer \textit{p}, called the ciphertext modulus, which is a positive power of 2, and defines the range which limits the magnitude of the input message, meaning, $m \in [\frac{-p}{2}, \frac{p}{2}]$ (also represented as ($m \in \mathcal{Z}_q)$). Now $p < q$, and ideally, it should be considerably smaller.\newline
+\newline\\
+\textbf{Code for LWEConfiguration:}
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+class LWEConfig:
+	'''
+	This class defines the configurations for encryption
+	'''
+	def __init__(self, p, q, noise_level, dimension):
+	'''
+	p: plaintext modulus
+	q: ciphertext modulus
+	noise_level: The noise level (used as standard deviation for generating the noise)
+	dimension: m (number of elements in the sk)
+	'''
+	self.p = p
+	self.q = q
+	self.sigma = noise_level
+	self.n = dimension
+\end{minted}
 
 Before encryption, you encode your input message to the higher 'q' space (ill define in the next section what how is this done). And the actual message basically takes the first p MSB (most significant bits) of this q space and the rest of the space is taken by the noise. You want to have a gap between these two so that decryption can be done accurately.
 
 \subsubsection{Encoding}
-Encoding, like the name suggests is \textit{encoding} the message $\mathcal{Z}_p$ to $\mathcal{Z}_q$. To do this, you first define, $\Delta = \frac{q}{p}$. Then you multiply: $\Delta \cdot m$. This moves the message m from $mathcal{Z}_p$ to $\mathcal{Z}_q$. After this, we can encrypt.
+Encoding, like the name suggests is \textit{encoding} the message $\mathbb{Z}_p$ to $\mathbb{Z}_q$. To do this, you first define, $\Delta = \frac{q}{p}$. Then you multiply: $\Delta \cdot m$. This moves the message m from $\mathbb{Z}_p$ to $\mathbb{Z}_q$. After this, we can encrypt. This encoded cleartext is also called as plaintext.\footnote{I call it that for clarity between non-encoded and encoded.}
+ \textbf{Encoding code:}
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def encode_plaintext(m, config):
+	'''
+	This function encodes the message before its enrypted.
+	'''
+	# get the delta
+	delta = config.q//config.p
+	encoded = np.int32(delta * m)
+	return LWEPlaintext(encoded)
+\end{minted}
+
+\textbf{The LWEPlaintext is just a class that stores (an encoded) plaintext. Its not exactly needed but for consistency its a good idea to have it:}
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+class LWEPlaintext:
+	'''
+	This class contains the plaintext to be encrypted.
+	'''
+	def __init__(self, m):
+		'''
+		This class (for now), just stores the message wrapping it in a class. It might contain code for encoding it too later but i dont know
+		'''
+		self.m = m
+	
+	def __str__(self):
+		return str(self.m)
+	
+	def __repr__(self):
+		return str(self.m)
+\end{minted}
 
 \subsubsection{Actual Encryption}
 First thing, you are given a message and a secret key. A good example of a secret key is an n dimensional binary vector (for LWE). You sample and create $\mathbf{A}$ and \textit{e}. Then you define \textit{b} such that:
@@ -62,6 +187,43 @@ First thing, you are given a message and a secret key. A good example of a secre
   \small{ $ \langle a, s \rangle $ is the dot product between a and s }
 \end{center}
 The tuple $\textbf{(a, b)} \in (\mathcal{R}^n, \mathcal{R})$ is the LWE encryption of the message m. \newline
+\textbf{Encryption Code:}
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+# LWEEncryptioKey Class
+	def encrypt(self, plaintext:LWEPlaintext):
+		'''
+		Encrypt the plaintext message
+		'''
+		# generate a and noise
+		a = generate_uniform_sample(self.config)
+		e = generate_normal_sample(self.config)
+		
+		# get b
+		b = np.dot(a, self.key) + plaintext.m + e 
+		
+		return LWECiphertext(a, b)
+	...
+\end{minted}
+\textbf{Code for LWECiphertext class. This stores LWECIphertext and defines arithmetic over it:}
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+class LWECiphertext:
+	'''
+	This class defines the ciphertext.
+	'''
+	def __init__(self, a, b):
+		self.a = a
+		self.b = b
+\end{minted}
 \textbf{Note for clarity:} LWECiphertexts encrypt a single scalar value. Therefore, in the encryption, \textit{m} \& \textit{e} are scalars. Whereas \textit{a} and \textit{s} are n-dimensional vectors, where n is already specified in the ecryption parameters. Remember this as this becomes a point of confusion between LWE, RLWE and GLWE ciphertexts.
 
 \subsection{Some information}
@@ -78,6 +240,41 @@ From the above step, we have $ m \cdot \Delta + e $, but this isnt the actual de
 \begin{center}
   $ d = \lfloor \frac{m \cdot \Delta + e} {\Delta} \rceil $
 \end{center}
+\textbf{Decryption and decoding code:}
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def decode_plaintext(m, config):
+	'''
+	This function decodes the decrypted plaintext to remove the noise and get the final output
+	'''
+	# get the delta
+	delta = config.q/config.p
+	# round to remove the noise
+	decoded = int(np.rint(m/delta))
+	# need to take a mod wrt p centered around 0 to get the final output
+	final = ((decoded + (config.p/2)) % config.p) - (config.p/2)
+	return final
+	
+# LWEEncryptionKey Class
+    def decrypt(self, cipher:LWECiphertext):
+		'''
+		This function decrypts the ciphertext generated using the same secret key.
+		'''
+		b = cipher.b
+		a = cipher.a
+		
+		inter = b - np.dot(a, self.key) # gives m + e, and not just m
+		# return LWEPlaintext(inter)
+		
+		# round and get the final decrypted output
+		final = decode_plaintext(inter, self.config)
+		
+		return LWEPlaintext(int(final))
+\end{minted}
 
 Now, if there is a sufficient gap between the MSBs and the noise (which is why it was important), this descaling and rounding operation brings the output back down to p (partially) and also removes the noise. This is why selecting the parameters p, q and $\sigma$ correctly is important. Because otherwise, the noise might become too large and end up \textit{mixing} with the MSBs that contain the actual message, leading to an incorrect and/or non-exact decryption. You want to make sure that:
 \begin{itemize}
@@ -160,7 +357,6 @@ Subtraction works the same way you just replace the + by the -.
 
 \subsubsection{Multiplication}
 For LWE ciphertexts, only multiplication with a scalar is supported. Consider a ciphertext $L = LWE_s(m) = (a, b)$ encyrpting a message m, which is to be multiplied with a cleartext scalar c. We define a function $PMul(L, c) = LWE_s(c \cdot m)$, where $PMul(L, c) = (a \cdot c, b \cdot c)$.  \newline
-
 \textbf{Why does this work?} \newline
 Decrypting $PMul(L, c)$:
 \begin{center}
@@ -168,6 +364,54 @@ Decrypting $PMul(L, c)$:
 	$b \cdot c - a \cdot s \cdot c = (c \cdot m) + (c \cdot e) $
 \end{center}
 Decoding this by dividing by $\Delta$ and rounding  will give $m \cdot c$.
+\textbf{Code for LWECiphertext arithmetic:}
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+# LWECiphertext Class
+	def add_ciphertext(self, other: LWECiphertext):
+		'''
+		This function adds a given ciphertext to the current ciphertext and returns a new ciphertext.
+		'''
+		# adding their as and bs
+		added_a = np.add(self.a, other.a, dtype=np.int32)
+		added_b = np.add(self.b, other.b, dtype=np.int32)
+	
+		# # taking mods just to see if this works, but we have to take mod wrt q
+		# q = config.q
+		# added_a = ((added_a + (q//2)) % q) - (q//2)
+		# added_b = ((added_b + (q//2)) % q) - (q//2) # im getting overflow errors when doing this
+		
+		return LWECiphertext(added_a, added_b)
+		
+	def sub_ciphertext(self, other:LWECiphertext):
+		'''
+		This function subtracts the other ciphertext from the current one.
+		'''
+		sub_a = np.subtract(self.a, other.a, dtype=np.int32)
+		sub_b = np.subtract(self.b, other.b, dtype=np.int32)
+		return LWECiphertext(sub_a, sub_b)
+	
+	def mul_plaintext(self, other:np.int32):
+		'''
+		Multiply the other integer to current ciphertext
+		'''
+		# we just need to multiply the give plaintext to both a and b
+		mul_a = np.multiply(other, self.a, dtype=np.int32)
+		mul_b = np.multiply(other, self.b, dtype=np.int32)
+		return LWECiphertext(mul_a, mul_b)
+	
+	def add_plaintext(self, other:LWEPlaintext):
+		'''
+		Add the other plaintext to the current ciphertext. This function assumes that the input plaintext message is already encoded to R_q.
+		'''
+		# we just need to scale other and then add it to b
+		addb = np.add(self.b, other.m, dtype=np.int32)
+		return LWECiphertext(self.a, addb)
+\end{minted}
 
 \section{Trivial LWE Ciphertext}
 This is just a ciphertext (a, b) where a is a vector of zeros and b is just the encoded message with no noise added to it. It will be used down the line to enable RLWE ciphertext arithmetic.
@@ -196,6 +440,102 @@ This is just a ciphertext (a, b) where a is a vector of zeros and b is just the 
 		\end{center}
 		
 		One very important thing to realize and understand is that when we say that a polynomial being in a ring $R_q[x]/(x^N + 1)$, it doesn't mean that it can not have a degree $> N$, it can. However, the process of doing modulus $x^N + 1$ the degree gets reduced to a number that smaller than N. Try to relate it to plaintext modulus, when we say that we have a number x s.t. $x \in R_q$,  it also means that any number that is beyond the range $[-\frac{q}{2}, \frac{q}{2})$, can be represented as another number that is in that range. Meaning, integers that are within that range, sort of act as a 'representative integer' for everything outside of that range who have the same mod q. Similarly, any polynomial \textit{f(x)} that is in the ring, sort of represents a family of polynomials that have the same modulus $R_q[x]/(x^N + 1)$. This is a very subtle thing that I understood and is something that is important conceptually. So whenever we talk about a polynomial $f(x) \in R_q[x]/(x^N + 1)$, f(x) really represents a family of polynomials that would share the same mod, and not just a specific polynomial.
+
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+class Polynomial:
+	'''
+	This class represents a polynomial in the ring Z_q[x]/(x^n + 1)
+	Note that the coefficients here are in increasing order of degrees of x, [constant, x, x**2, ..., x**N]
+	'''
+	
+	def __init__(self, N, coeffs: np.ndarray):
+		self.N = N
+		self.coeffs = coeffs
+	
+	def __str__(self):
+		'''
+		Print the ciphertext as an equation.
+		'''
+		prtstr = ""
+		nonzeroct = 0
+		for i, c in enumerate(self.coeffs):
+			if c:
+				if nonzeroct:
+					prtstr += " + "
+				prtstr += f"{c}x^{i}"
+				nonzeroct += 1
+		
+		return prtstr
+	
+	def polynomial_const_multiply(self, c:np.int32):
+		'''
+		Multiply the current polynomial with the given constant integer and return it as a new polynomial.
+		'''
+		new_p = Polynomial(self.N, np.multiply(c, self.coeffs, dtype=np.int32))
+		return new_p
+	
+	def polynomial_multiply(self, p2: Polynomial):
+		'''
+		Multiply the current polynomial with the given poylnomial and return the new polynomial.
+		'''
+		# get the N from p2
+		p2N = p2.N
+		# multiply and pad the results to have 2N-1 (thats the longest polynomial you can get)
+		# the np.polymul function requires the coefficients in decreasing order of powers or x, se we reverse the current coeff array and then reverse the final output's back again.
+		poly_prod = np.polymul(self.coeffs[::-1], p2.coeffs[::-1])[::-1]
+		# creating the final answer with padded coeffs
+		poly_padded = np.zeros(2*self.N - 1, dtype=np.int32)
+		poly_padded[:poly_prod.shape[0]] = poly_prod
+		
+		# now, taking modulus of the result (poly_padded) wrt x^N + 1
+		result = poly_padded[:self.N]
+		result[:-1] -= poly_padded[self.N:]
+		return Polynomial(self.N, result)
+	
+	def polynomial_add(self, p2: Polynomial):
+		'''
+		This function adds a polyonmial to the given polynomial and returns the output as a new polynomial.
+		'''
+		add_coeffs = np.add(self.coeffs, p2.coeffs, dtype=np.int32)
+		return Polynomial(self.N, add_coeffs)
+		
+	def polynomial_subtract(self, p2: Polynomial):
+		'''
+		This function subtracts the given polynomial from the current one and returns the new polynomial.
+		Note: Its self - p2 and not p2 - self.
+		'''
+		sub_coeffs = np.subtract(self.coeffs, p2.coeffs, dtype=np.int32)
+		return Polynomial(self.N, sub_coeffs)
+	
+def make_zero_polynomial(N:int):
+	'''
+	Declare a zero polynomial and return it. Basically a polynomial where all the coefficients are zeros.
+	'''
+	return Polynomial(N = N, coeffs = np.zeros(N, dtype=np.int32))
+	
+def build_monomial(N, i, c):
+	'''
+	This function builds a monomial c * x^i in the ring R[x]/(x^N + 1)
+	NOTE: Rememeber that the coeffs are in increasing order of powers of x. [constant, x, x**2, ..., x**N]
+	'''
+	coeffs = np.zeros(N, dtype=np.int32)
+	
+	# find k such that 0 <= i + k*N < N
+	i_mod_n = i % N
+	k = (i_mod_n - i)//N
+	
+	# if k is odd then the monomial gets a negative sign because
+	# x^i = (-1)^k + x^(i + k*N) = (-1)^k + x^(i % N)
+	sign = 1 if k % 2 == 0 else -1
+	coeffs[i_mod_n] = sign * c
+	
+	return Polynomial(N, coeffs)
+\end{minted}
 		
 	\section{RLWE Ciphertexts}
 		Like LWE Ciphertexts encrypt scalar values, RLWE Ciphertexts encrypt polynomials. Meaning, the following things change in RLWE Ciphertexts compared to LWE CIphertexts.
@@ -205,9 +545,85 @@ This is just a ciphertext (a, b) where a is a vector of zeros and b is just the 
 			\item b is a polynomial instead of a scalar value.
 		\end{itemize}
 		However, the encryption process remains the same. Also, the configurations, p (plaintext modulus), q (ciphertext modulus) and the std deviation ($\sigma$) remain the same. The parameter N which was used to define the legnth of the encryption key and a, are now used as the degree of the secret key s(x) and a(x) polynomials.
+		\begin{minted}[
+			fontsize=\small,
+			frame=single,
+			framesep=3mm,
+			bgcolor=bg
+			]{python}
+class RLWEConfig:
+	'''
+	This class defines the RLWE config.
+	'''
+	def __init__(self, N, p, q, sigma):
+		self.N = N
+		self.p = p
+		self.q = q
+		self.sigma = sigma
+		\end{minted}
+
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+class RLWEEncryptionKey:
+	'''
+	This class defines the RLWE encryption/secret key and performs encryption and decryption of ciphertexts.
+	'''
+	def __init__(self, config:RLWEConfig):
+		self.config = config
+		self.key = Polynomial # this time, the key is also a polynomial.
+		
+	def generate_key(self):
+		'''
+		Generate the key. The key is a random polynomial of degree N with binary coefficients.
+		'''
+		self.key = Polynomial(
+			N=self.config.N,
+			coeffs = np.random.randint(
+					low = 0,
+					high = 2,
+					size = self.config.N,
+					dtype = np.int32
+				)
+			)
+\end{minted}
 		
 		\subsection{Encoding}
 			To encode a cleartext polynomial into plaintext, you encode the individual coefficients the same way a scalar is encoded for LWE. After encoding a polynomial $p(x) = c_0 + c_1x + c_2x^2 + ... + c_{N-1}x^{N-1}$ becomes $p'(x) = c'_0 + c'_1x + c'_2x^2 + ... + c'_{N-1}x^{N-1}$, where $c'_i = c_i \cdot \Delta; \: \forall i \in [0, N-1]$ where $\Delta = \frac{q}{p}$.
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def encode_rlwe(p: Polynomial, config: RLWEConfig):
+	'''
+	This function encodes the cleartext polynomial and returns it as a Plaintext.
+	'''
+	# get the delta
+	delta = config.q//config.p
+	# scale each coefficient of the polynomial by multiplying it with delta
+	scaled_coeffs = np.multiply(p.coeffs, delta, dtype=np.int32)
+	return RLWEPlaintext(Polynomial(p.N, scaled_coeffs), config=config)
+\end{minted}
+
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+class RLWEPlaintext:
+	'''
+	This class implements the RLWE Plaintext. This just stores the encoded message polynomial. Functionally, it isnt really needed but Ive just added it to make my code consistent with how TFHE libraries work.
+	'''
+	def __init__(self, p: Polynomial, config: RLWEConfig):
+		self.p = p
+		self.config = config
+\end{minted}
 			
 		\subsection{Encryption}
 			An RLWE encryption of a polynomial p(x) under the secret key s(x) is a tuple (a(x), b(x)). Such that: \newline
@@ -215,7 +631,74 @@ This is just a ciphertext (a, b) where a is a vector of zeros and b is just the 
 				$b(x) = a(x) \cdot s(x) + p'(x) + e(x)$
 			\end{center}
 			where $a(x) \cdot s(x)$ is the polynomial multiplication between a(x) and s(x) mod $(x^N + 1)$. e(x) is the noise polynomial whose coefficients are created in the same way the noise e was created for LWE ciphertexts. a(x) is also a polynomial whose coefficients are created the same way the vector a was created for LWE ciphertexts. Note that the p'(x) here is the encoded polynomial (plaintext) and not the raw polynomial (cleartext).
-			Now since RLWE encryptions are random, as elements of it such as a(x) and e(x) are generated randomly, a family of RLWE ciphertexts that encrypt a polynomial p(x) under the secret key s(x) is denoted by: $Enc^{RLWE}_{s(x)} ( p(x)) = \langle a(x), b(x) \rangle$. Note that sometimes $RLWE_{s(x)}(p(x))$ might be used to refer to them as well just because its easier and faster to write.
+			Now since RLWE encryptions are random, as elements of it such as a(x) and e(x) are generated randomly, a family of RLWE ciphertexts that encrypt a polynomial p(x) under the secret key s(x) is denoted by: $Enc^{RLWE}_{s(x)} ( p(x)) = \langle a(x), b(x) \rangle$. Note that sometimes $RLWE_{s(x)}(p(x))$ might be used to refer to them as well just because its easier and faster to write.\newpage
+		
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def rlwe_generate_uniform_sample(config: RLWEConfig) -> Polynomial:
+	'''
+	This function generates a polynomial of the degree specified in the config where each coefficient is an integer sampled from a uniform random distribution.
+	'''
+	# get the limits
+	minval = -config.q//2
+	maxval = config.q//2
+	
+	# generate N values between the min (inclusive) and max (exclusive)
+	coeffs = np.random.randint(minval, maxval, size=config.N, dtype=np.int32)
+	
+	return Polynomial(config.N, coeffs=coeffs)
+	
+def rlwe_generate_normal_sample(config: RLWEConfig) -> Polynomial:
+	'''
+	This function generates a polynomial of the degree as per the config where each coefficient is drawn from a normal distribution with mean 0 and standard distribution given in the config.
+	'''
+	coeffs = np.int32(np.multiply(np.random.normal(0, config.sigma, size=config.N), config.q//2))
+	return Polynomial(config.N, coeffs)
+\end{minted}
+
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+# RLWECiphertext Class...
+def encrypt(self, mx: RLWEPlaintext):
+	'''
+	Encrypt the input Polynomial p into an RLWE Ciphertext.
+	'''
+	# generate a and noise e
+	a = rlwe_generate_uniform_sample(self.config)
+	e = rlwe_generate_normal_sample(self.config)
+	
+	# encrypting
+	a_times_s = a.polynomial_multiply(self.key) # <a, s>
+	as_plus_m = a_times_s.polynomial_add(mx.p) # <a, s> + m (m is already encoded, which is why I wrote m and not delta * m)
+	b = as_plus_m.polynomial_add(e)
+	
+	return RLWECiphertext(a, b, self.config)
+...
+\end{minted}
+
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+class RLWECiphertext:
+'''
+	This class implements the RLWE ciphertext.
+	'''
+	def __init__(self, a: Polynomial, b: Polynomial, config: RLWEConfig):
+		self.config = config
+		self.a = a
+		self.b = b
+\end{minted}
 			
 		\subsection{Decryption}
 			The decryption also is similar to the LWE decryption. You first do:
@@ -223,12 +706,80 @@ This is just a ciphertext (a, b) where a is a vector of zeros and b is just the 
 				$b(x) - a(x) \cdot s(x) =  p'(x) + e(x)$
 			\end{center}
 			After that, you round and decode the $p'(x) + e(x)$ to get p(x).\newline
-			
 			\textbf{Decoding}\newline
 				To decode the obtained $p'(x) + e(x)$, you just do $\frac{p'(x) + e(x)}{\Delta}$ to finally get p(x).
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def decode_coeff(c, delta, p):
+	'''
+	This function decodes a specific coefficient within the polynomial.
+	'''
+	# divide by delta and round
+	decoded_c = int(np.rint(c/delta))
+	# calculate decoded_c mod p and you get the final decoded value
+	out = ((decoded_c + (p//2)) % p) - (p//2)
+	return out
+	
+def decode_rlwe(p: Polynomial, config: RLWEConfig):
+	'''
+	This function decodes the given polynomial to remove the noise and get the final decrypted cleartext.
+	'''
+	# calcualte the delta
+	delta = config.q//config.p
+	raw_coeffs = p.coeffs
+	# decoded each coeff and get the output polynomial
+	decoded_coeffs = np.array([decode_coeff(c, delta,config.p) for c in raw_coeffs])
+	
+	return Polynomial(config.N, decoded_coeffs)
+\end{minted}
+
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+# RLWEEncryptionKey Code...
+	def decrypt(self, cx: RLWECiphertext) -> Polynomial:
+		'''
+		Decrypt the given ciphertext, decode it and return the cleartext polynomial.
+		'''
+		# separate a and b
+		ca = cx.a
+		cb = cx.b
+		# subtracting <a, s> from b
+		subbed = cb.polynomial_subtract(ca.polynomial_multiply(self.key))
+		# decode: divide by delta to remove the noise and take mod wrt p
+		decoded = decode_rlwe(subbed, self.config)
+		
+		return decoded
+\end{minted}
 			
 		\subsection{Switching Between LWE and RLWE Encryption Keys}
 		Remember that LWE encryption key is a vector of integers (for example, binary values), while RLWE encryption key is a polynomial with integer coefficients (binary coefficients for instance). it is possible and very trivial to switch an LWE key to RLWE key. To do this, you just use the N length vector key from LWE as coefficients for s(x), the RLWE key. It is important to remember that this will only work and should be done only when the configuration parameters for both the schemes are exactly the same.
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def lwe_to_rlwe_key(lwe_key: LWEEncryptionKey, config: RLWEConfig):
+	'''
+	This function creates an RLWE key for/from the given RLWE key.
+	'''
+	# creating a polynomial with the coeffs as the lwe_key
+	if lwe_key.config.n != config.N:
+	raise ValueError("The size of LWEKey and degree of RLWEConfig do not match.")
+	key_poly = Polynomial(N=config.N, coeffs=lwe_key.key)
+	rlwe_key = RLWEEncryptionKey(config=config)
+	rlwe_key.key = key_poly
+	
+	return rlwe_key
+\end{minted}
 		
 		\subsection{Arithmetic}
 		Again, just like LWE ciphertexts, there are three types arithmetic operations that can be done with RLWE ciphertexts:
@@ -258,10 +809,64 @@ This is just a ciphertext (a, b) where a is a vector of zeros and b is just the 
 		\end{center}
 		\textbf{Why did we just use cleartext p(x) and not encode it}\\
 		Remember that the ciphertext encrypts an encoded polynomial, whose coefficients are already multiplied by $\Delta$. Encoding the plaintext polynomial and then multiplying will result in the resulting polynomial being 're-encoded', meaning, it becomes $(\Delta \cdot f(x)) \cdot (\Delta \cdot p(x)) = \Delta^2 \cdot f(x) \cdot p(x)$ which will mess up with the decryption. Therefore, we just need only one of the two encoded and since one of them is a ciphertext, its already encoded by design and thus, the other one should be left as cleartext. This is important to remember as literature uses plaintext multiplication and the terminology might give an incorrect impression.
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+# RLWECiphertext Code...
+	def add_ciphertext(self, other: RLWECiphertext):
+		'''
+		Add another ciphertext <other> to the current ciphertext and return the result as a new ciphertext. Two add two ciphertexts, you just add their respective a and b polynomials.
+		'''
+		# adding a and b, and creating a new ciphertext
+		added_a = self.a.polynomial_add(other.a)
+		added_b = self.b.polynomial_add(other.b)
+		
+		return RLWECiphertext(added_a, added_b, self.config)
+		
+	def sub_ciphertext(self, other: RLWECiphertext):
+		'''
+		Subtract another ciphertext <other> from the current one and return the result as a new ciphertext. This operation subtracts <other> from the <self> and not the other way round.
+		'''
+		# subtracting a and b and returning a new ciphertext
+		subbed_a = self.a.polynomial_subtract(other.a)
+		subbed_b = self.b.polynomial_subtract(other.b)
+		
+		return RLWECiphertext(subbed_a, subbed_b, self.config)
+	
+	def mul_plaintext(self, cx: RLWEPlaintext):
+		'''
+		This function multiplys the given plaintext to self and returns the product as a new ciphertext.
+		'''
+		# for this, you multiply both a and b with the plaintext
+		mul_a = self.a.polynomial_multiply(cx.p)
+		mul_b = self.b.polynomial_multiply(cx.p)
+		
+		return RLWECiphertext(mul_a, mul_b, self.config)
+\end{minted}
 		
 	\subsection{Trivial RLWE Ciphertext}
 	A trivial RLWE ciphertext is an RLWE ciphertext where a(x) is just a zero polynomial and b(x) is just the encoded plaintext.
-	
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def get_trivial_rlwe_ciphertext(mx: Polynomial, config: RLWEConfig):
+	'''
+	This function returns the trivial RLWE ciphertext for the given config. Trivial RLWE ciphertext is basically just an RLWE ciphertext where a is just a zero polynomial and b is polynomial itself.
+	NOTE: Im not very sure if we should encode the input polynomial, meaning, if we take a cleartext input or plaintext input.
+	'''
+	# sanity check
+	if len(mx.coeffs) != config.N:
+	raise ValueError("The polynomial has a degree thats different from the degree provided in the config file. Please ensure that theyre the same.")
+	# creating a
+	a = make_zero_polynomial(config.N)
+	return RLWECiphertext(a = a, b = mx, config=config)
+\end{minted}
 
 \chapter{GSW Ciphertexts and Ciphertext Multiplication}
 	The previous section mentioned that multiplication between two RLWE ciphertexts is non-trivial. Instead, one way of multiplying two ciphertexts is multiplication between an RLWE and a GSW ciphertext. This chapter first describes GSW Ciphertext and then proceeds to talk about multiplying a GSW and an RLWE ciphertext together..
@@ -284,6 +889,18 @@ This is just a ciphertext (a, b) where a is a vector of zeros and b is just the 
 			\item Each chunk converted into its integer representation will be the k-th element of the representation. Note that the sequence will start from the right hand side.
 		\end{itemize}
 	\end{itemize}
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def get_k(q, p):
+	'''
+	Given q (ciphertext modulus) and p (not plaintext modulus, but a different parameter specifically for base p representation used for ciphertext-ciphertext multiplication of an RLWE and GWE cipherterxts), get the value of k, which is the sequence length of base-p representation of any input.
+	'''
+	return np.int32(np.log2(q)/np.log2(p))
+\end{minted}
 	The problem with the above method to find the base-p representation is that it works with unsigned integers, as binary representation loses the sign and the elements of the representation will also be unsigned. But FHE works with signed integers. While this technique cant be used as-is, it can be used after making a small modification to the original integer.  Basically, instead of finding the base-p representation of the integer x, it is offset by an integer B, and the above mentioned method is used to then calculate the base p representation of x + B. Let the representation be $(x'_0, x'_1, ..., x'_{k-1})$. Once it is obtained, $\frac{p}{2}$ can be subtracted from the individual elements of the sequence to get the base-p representation of x.
 	
 	\subsubsection{How to find the offset value?}
@@ -300,12 +917,87 @@ This is just a ciphertext (a, b) where a is a vector of zeros and b is just the 
 	\end{center}
 	
 	Based on this, $B = \frac{p}{2} \sum\limits_{i=0}^{k-1} p^i$
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def convert_array_to_base_p(a: np.ndarray, p, q):
+	'''
+	This function converts each element into a its base p-representation, given the values of q (ciphertext modulus) and p (not plaintext modulus). Note that the representation for each element in a will be a sequence of a fixed length.
+	'''
+	log_p = np.log2(p).astype(np.int32)
+	k = get_k(q = q, p = p)
+	p_half = p//2
+	offset = p_half * np.sum([p**i for i in range(k)])
+	mask = p - 1 # this in binary is exactly log_p ones.
+	
+	a_offset = np.uint32(a + offset) # need to set this to uint 32 as the the p-bit representation will be calculated from unsigned integers and then converted to signed
+	# return a_offset
+	
+	output = [] # this will store the output base-p representation for each element
+	# NOTE: output is a list of k numpy arrays. Each numpy array stores the ith p-bit representation of the corresponding original input.
+	for i in range(k):
+	output.append(
+	(np.right_shift(a_offset, i * log_p) & mask).astype(np.int32) - np.int32(p_half)
+	)
+	
+	return output
+	
+def convert_base_p_to_int_array(a: Sequence[np.array], p: np.int32):
+	'''
+	This function takes as input the p-bit representations of an array, and converts it back into integer. a should be a list or a iterator of ndarrays where each ndarray contains the ith p-bit representation of the integer.
+	'''
+	# calculate x from the representation: x = x_0 + x_1 p + ... + x_k-1 p^k-1
+	decimal_repr = np.zeros(len(a[0]), dtype=np.int32)
+	for i in range(len(a)):
+	decimal_repr += (a[i] * (p**i)).astype(np.int32)
+	return decimal_repr
+	
+	# defining base p representation functions for polynomials
+def get_base_p_from_polynomial(poly: Polynomial, p: np.int32, q: np.int32) -> Sequence[Polynomial]:
+	'''
+	This function converts each coefficient of the coefficients of the given polynomial and returns them as a set of polynomials (sequence of the polynomials is very important).
+	'''
+	coeffs = poly.coeffs
+	# converting coeffs into base p representation
+	coeffs_base_p = convert_array_to_base_p(coeffs, p, q)
+	# create a polynomial for each array
+	base_p_poly = [Polynomial(N=poly.N, coeffs = ic) for ic in coeffs_base_p]
+	
+	return base_p_poly
+	
+def get_poly_from_base_p(base_p_polys: Sequence[Polynomial], p) -> Polynomial:
+	'''
+	This function calculates the polynomial from the given base p representation polynomials.
+	'''
+	# get all the coefficients from the sequence
+	base_p_coeffs = [p.coeffs for p in base_p_polys]
+	# get the integer coeffs from the list
+	int_coeffs = convert_base_p_to_int_array(base_p_coeffs, p)
+	return Polynomial(N=base_p_polys[0].N, coeffs = int_coeffs)
+\end{minted}
 	
 	\subsubsection{Why is the Base-p representation needed?}
 	The base-p representation will be needed to perform the GSW encryption down the line which will be used for multiplication.
 	
 	\section{GSW Encryption}
 	The idea behind a GSW encryption is to 'hide/mask' a plaintext polynomial f(x) between \textbf{zero ciphers} to encrypt it and hide it. 
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+class GSWConfig:
+	'''
+	This class implements the GSW Config. It takes the RLWE config, as most of the configurations are identical. Additionally, it also takes gsw_p, which will be used for the base p representation.
+	'''
+	def __init__(self, rlwecfg: RLWEConfig, gsw_p: int):
+		self.rwlecfg = rlwecfg
+		self.gsw_p = gsw_p
+\end{minted}
 	
 	\begin{itemize}
 		\item \textbf{Zero Cipher (RLWE):} A zero cipher is just the RLWE encryption of 0. Note that it is an actual encryption where the input cleartext (and thus the resulting plaintext) are 0, however, it still uses the entire encryption mechanisms and thus, the polynomials a(x) and b(x) are not zero. Remember this detail because in my experience, it becomes easy to mistake it for something thats more like a trivial RLWE encryption otherwise.
@@ -327,6 +1019,93 @@ This is just a ciphertext (a, b) where a is a vector of zeros and b is just the 
 	\begin{center}
 		$Enc_{s(x)} ^{GSW}(f(x)) = f(x) \cdot I_{2 \times 2} + Z$
 	\end{center}
+	
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+class GSWConfig:
+	'''
+	This class implements the GSW Config. It takes the RLWE config, as most of the configurations are identical. Additionally, it also takes gsw_p, which will be used for the base p representation.
+	'''
+	def __init__(self, rlwecfg: RLWEConfig, gsw_p: int):
+		self.rwlecfg = rlwecfg
+		self.gsw_p = gsw_p
+\end{minted}
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+class GSWCiphertext:
+	'''
+	This class implements the gsw ciphertext.
+	'''
+	def __init__(self, config: GSWConfig, polys: Sequence[RLWECiphertext]):
+		self.config = config
+		self.polys = polys
+\end{minted}
+
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+class GSWEncryptionKey:
+	'''
+	This class implements the GSW encryption key and methods to encrypt and (possibly) decrypt a gsw ciphertext.
+	'''
+	def __init__(self, config: GSWConfig):
+		self.config = config
+		self.key = Polynomial # this is just going to be the RLWE encryption key s(x)
+		self.rlwe_key = RLWEEncryptionKey
+	
+	def generate_key_from_rlwe_key(self, rlwe_key: RLWEEncryptionKey):
+		'''
+		This function creates the GSWEncryptionKey from the RLWEEncryption key. To be honest, its just the RLWEEncryption key as it is, but for the sake of structure of code and to keep it consistent with other classes. Its a little silly to save both the rlwe_key object and the key polynomail as well, but eh...
+		'''
+		self.key = rlwe_key.key
+		self.rlwe_key = rlwe_key
+	
+	def get_rlwe_key_from_gsw(self):
+		'''
+		This function returns the rlwe key from the current gsw_key. Again, its the same, but consistency, formality, something, something...
+		'''
+		rlwe_key = RLWEEncryptionKey(config=self.config.rwlecfg)
+		rlwe_key.key = self.key
+		return rlwe_key
+		
+	def encrypt(self, fx: Polynomial):
+		'''
+		Encrypt a given polynomial as a GSWCiphertext.
+		'''
+		# first, we need to get the value of k
+		k = get_k(self.config.rwlecfg.q, self.config.gsw_p)
+		gsw_p = np.int32(self.config.gsw_p) # i dont want to write the whole thing
+		# make Z: the zero encryption array of shape (2k, 2), note that each row is a RLWE ciphertext, the 2 just means (a(x), b(x))
+		zero_poly = make_zero_polynomial(self.config.rwlecfg.N)
+		zero_poly_plain = encode_rlwe(zero_poly, self.config.rwlecfg) # while for 0 config, the coefficients for both the plaintext and ciphertext are going to be the same, the encryption for RLWE only accepts an RLWEPlaintext and not a Polynomial
+		Z = [
+		self.rlwe_key.encrypt(zero_poly_plain) for _ in range(2*k)
+		] # this has shpae (2k, 2)
+		# create the GSW ciphertext
+		# its created using the equation: fx * B_p + Z
+		# i will implicitly divide the Z matrix in two halves 
+		# here, ill iterate for k times, and for each iteration, the corresponding index's RLWE of the first half's a gets fx * (p**i) added and the corresponding index of the second half's b gets the same added
+		for i in range(k):
+			# multiply fx with the correct power of p
+			scaled_fx = fx.polynomial_const_multiply(gsw_p**i)
+			# add it to first half's a
+			Z[i].a = Z[i].a.polynomial_add(scaled_fx)
+			# add it to second half's b
+			Z[i + k].b = Z[i + k].b.polynomial_add(scaled_fx)
+		
+		return GSWCiphertext(self.config, Z)
+\end{minted}
 
 	This results in a \textbf{vector} of two RLWE ciphertexts (note that it says vector of 2 RLWE ciphertexts, while Z is denoted as a matrix, each row there is an RLWE ciphertext, so it is also a vector to 2 RLWE ciphertexts. The reason for this weird seeming notation will be clear later.). There are a few thing to be noted about GSW ciphertext/encryption:
 	\begin{itemize}
@@ -393,6 +1172,47 @@ This is just a ciphertext (a, b) where a is a vector of zeros and b is just the 
 	\end{center}
 	This multiplication is sort of like a matrix-multiplication between the two matrices. Remember that $(Base_p(a(x)), Base_p(b(x)))$ is concatenated base p representations, which makes a vector of 2k polynomials, and multiplying it with G, which is a $(2k \times 2)$ matrix (each row is an RLWE ciphertext (a(x), b(x))), and a matmul between then results in a vector of two polynomials, which will be the corresponding $\langle a(x), b(x) \rangle$ RLWE ciphertext that encrypts the ciphertext multiplication of two polynomials.
 	
+	\begin{minted}[
+		fontsize=\small,
+		frame=single,
+		framesep=3mm,
+		bgcolor=bg
+		]{python}
+def ciphertext_multiplication(G: GSWCiphertext, R: RLWECiphertext) -> RLWECiphertext:
+	'''
+	This function performs the ciphertext-ciphertext multiplication between G and R. G is of shape (2k, 2), basically 2k RLWE Ciphertexts and each Rlwe ciphertext is (a, b).
+	So a little explanation because this function looks a little confusing (but in reality it really isnt once you look at it hard enough keeping in mind how the multiplication is actually done). Im going to define in the docstring how does this operation actually works. 
+	So:
+	First, G is a series of 2k RLWECiphertexts. Essentially, theyre all zero ciphertexts to which fx (the polynomial with which we actually want to achieve multiplication with R) is added. For the first half of G [0:k-1], fx is added to a(x) of each RLWE 'row', and is added to b(x) for the second half [k: 2k-1].
+	Second, a(x) and b(x) of R are converted to corresponding base-p representation. Now R was basically a vector/sequence/whatever of 2 polynomials, but now it becomes a vector of 2k polynomials (k polynomials for base p representation of a(x) and b(x)). 
+	To perform c-c multiplication, you basically do something akin to matrix multiplication, (Basep(a(x)), Basep(b(x))) @ G, which gives you a single rlwe polynomial, and its shape will be (1, 2), a single (a(x), b(x)) ciphertext. Here, each multiplication is polynomial multiplication followed by polynomial addition for matmul.
+	'''
+	gsw_config = G.config
+	rlwe_config = R.config
+	# first get the base p representation for R, for both a(x) and b(x) and create it into a sequence of 2k polynomials
+	R_base_p_repr = get_base_p_from_polynomial(R.a, p=gsw_config.gsw_p, q=rlwe_config.q) + get_base_p_from_polynomial(R.b, p=gsw_config.gsw_p, q=rlwe_config.q) # the output of the function is a list so + just appends
+	
+	# so matmul here is implemented using a for loop, first, an RLWECiphertext that is basically all zeros is initialized and then the corresponding products a.G and b.G for each R_base_p_repr is added to a and be of this new RLWECiphertext respectively
+	res_rlwe_cipher = RLWECiphertext(
+		config = rlwe_config,
+		a = make_zero_polynomial(rlwe_config.N),
+		b = make_zero_polynomial(rlwe_config.N)
+	)
+	
+	for i, rp in enumerate(R_base_p_repr):
+		# multiply the current r to both a and b of the current row of g.a
+		a_mul = rp.polynomial_multiply(G.polys[i].a)
+		# adding
+		res_rlwe_cipher.a = res_rlwe_cipher.a.polynomial_add(a_mul)
+		
+		# doing the same for b
+		b_mul = rp.polynomial_multiply(G.polys[i].b)
+		# adding
+		res_rlwe_cipher.b = res_rlwe_cipher.b.polynomial_add(b_mul)
+	
+	return res_rlwe_cipher
+	\end{minted}
+	
 \section{GSW Encryption Key}
 The actual encrypted ciphertexts in a GSW ciphertexts are the zero RLWE ciphertexts, we do not actually encrypt the polynomial f(x). And since these are RLWE ciphertexts, the gsw encryption key polynomial is the same as the rwle encryption key polynomial.
 	
@@ -423,6 +1243,29 @@ In a homomorphic multiplexer, the selector bit is an GSW Ciphertext, while the t
 \end{center}
 
 The respective methods are already defined and can be used to implement this CMux operation using the relevant ciphertexts. Remember that the keys need to be from the same origin (the RLWE key should be converted into the GSW key for encrypting the selector).
+
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def cmux(b: GSWCiphertext, l0: RLWECiphertext, l1:RLWECiphertext) -> RLWECiphertext:
+	'''
+	This function implements the multiplexer for ciphertexts.
+	The homomorphic multiplexer operation homomorphically computes: b(l1 - l0) + l0.
+	So its basically chaining the following operations: CAdd(CMul(b, CSub(l1, l0)), l0)
+	the function returns l0 is b == 0, else l1.
+	'''
+	# calculating l1 - l0
+	subbed = l1.sub_ciphertext(l0)
+	# calculating product of subbed and b
+	prod = ciphertext_multiplication(b, subbed)
+	# adding l0 to get the cmux result
+	mux_cipher = prod.add_ciphertext(l0)
+	
+	return mux_cipher
+\end{minted}
 
 \section{BlindRotate}
 Take a polynomial $f(x) = 1 + 2x + x^2 \in Z_q[x]/(x^3 + 1)$. Now do:
@@ -480,7 +1323,37 @@ Combine this with the fact that the $s_i$ is either a 0 or a 1, this can be mode
 	\end{equation}
 \end{center}
 
-However, to be able to do this, we need to make a change/do an additional step. Note that for CMux, the selector bit needs to be a GSW ciphertext, however, the secret key array isnt it. Solution, encrypt each component of the secret key $s_i$ into a GSW ciphertext, $t_i = GSW_{s(x)} s_i$. The resulting vector of GSW ciphertexts $[t_0, t_1, ..., t_n]$ is called the \textbf{Bootstrapping Key}. Other than this, we are all set. Now, the Blindrotate operation can be defined using a combination of the methods that we already have defined. First, the relation
+However, to be able to do this, we need to make a change/do an additional step. Note that for CMux, the selector bit needs to be a GSW ciphertext, however, the secret key array isnt that. Solution, encrypt each component of the secret key $s_i$ into a GSW ciphertext, $t_i = GSW_{s(x)} s_i$. The resulting vector of GSW ciphertexts $[t_0, t_1, ..., t_n]$ is called the \textbf{Bootstrapping Key}. 
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+class BootstrapKey:
+	'''
+	This class implements the bootstrap keys and the methods associated with it, like BlindRotate.
+	'''
+	def __init__(self, config: GSWConfig):
+		self.config = config
+		self.key = Sequence[GSWCiphertext] # each component (s_i) from the LWE key will be a GSW ciphertext
+	
+	def generate_bootstrap_key(self, lwe_key: LWEEncryptionKey, gsw_key: GSWEncryptionKey):
+		'''
+		generate the bootstrapping keys. The bootstrapping keys are just GSW encryption of each component of the LWE_key using the gsw_key provided.
+		NOTE TO SELF: Im debating whether to make the lwe_key and gsw_key members of this class or not. Right now I wont, but if there are other operations that require these keys in addition to the bootstrap keys, I will.
+		'''
+		bs_keys = [] # this will store the keys
+		# looping across each lwe key component and encrypting it
+		for si in lwe_key.key:
+			# first, create a monomial with the si being constant
+			si_monomial = build_monomial(self.config.rwlecfg.N, 0, si)
+			si_gsw = gsw_key.encrypt(si_monomial)
+			bs_keys.append(si_gsw)
+		self.key = bs_keys
+\end{minted}
+
+Other than this, we are all set. Now, the Blindrotate operation can be defined using a combination of the methods that we already have defined. First, the relation
 \begin{center}
 	$G_i = CMux(t_i, G_{i-1}, PMul(x^{a'_i}, G_{i-1}))$, \\
 	where, $G_0 = PMul(x^{b'}, F)$ \\(F is the RLWE ciphertext encrypting f(x))
@@ -490,6 +1363,37 @@ Then, the BlindRotate operation is defined as:
 	$BlindRotate(I, F) = G_N$
 \end{center}
 In case you forgot where I is actually used (I will sometimes), due to the wall of text and a lot of math above, remember that the scaled version of I, $\alpha \cdot I$,  is $\langle a', b' \rangle$.
+
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+# BootstrapKey Class...
+	def blindrotate(self, FX: RLWECiphertext, I: LWECiphertext) -> RLWECiphertext:
+		'''
+		This function implements the Rotate(I, FX) function homomorphically. This function, given i, and a polynomial f(x) (I = LWE(i), FX = RLWE(f(x)), calculates x^i . f(x) as an RLWECiphertext.
+		'''
+		# scale the lwe ciphertext 
+		scaled_I_a = np.int32(np.rint(np.multiply(I.a, ((2 * self.config.rwlecfg.N)/ self.config.rwlecfg.q)))) 
+		scaled_I_b = np.int32(np.rint(np.multiply(I.b, ((2 * self.config.rwlecfg.N)/ self.config.rwlecfg.q)))) # NOTE: This is going to be a constant since this is an LWE ciphertext
+		
+		# rotate operation
+		# initialize g0
+		xb_poly = build_monomial(self.config.rwlecfg.N, scaled_I_b, 1)
+		xb_plain = RLWEPlaintext(xb_poly, FX.config)        
+		rotated_poly = FX.mul_plaintext(xb_plain) # this will updated every timestep
+		# loop N times to finally get the rotated output
+		for i, ai in enumerate(scaled_I_a):
+			# get g_i-1 (x) * x^a_i
+			poly = RLWEPlaintext(build_monomial(self.config.rwlecfg.N, -ai, 1), self.config.rwlecfg) # just converting it to a plaintext because the plaintext multiply in RLWE wants a plaintext
+			right = rotated_poly.mul_plaintext(poly)
+			# update rotated_poly using the cmux operation
+			rotated_poly = cmux(self.key[i], rotated_poly, right)
+		
+		return rotated_poly
+\end{minted}
 
 \section{Extract Sample}
 The SampleExtract function homomorphically returns the i-th coefficient of the encrypted RLWE polynomial as an LWE Ciphertext. The returned LWE encryption of the coefficient is encrypted under the associated LWE encryption key of the RLWE encryption key.  Note that for any RLWE ciphertext, this is true:
@@ -515,6 +1419,32 @@ Replacing this with the new expression for $(a(x), s(x))_i$:
 	$f_i + e_i = b_i - Conv(a(x), i) \cdot s$
 \end{center}
 Based on this, the LWE ciphertext for the extracted coefficient becomes: $ExtractSample(i, F) = ( Conv(a(x), i) , b_i)$
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def extract_sample(i: int, FX: RLWECiphertext) -> LWECiphertext:
+	'''
+	This function extracts the ith coefficient of the polynomial encrypted in the input FX and returns the ith coefficient as an LWE Polynomial. It calculates the ai (a for the LWE ciphertext) using Conv(a(x), i) and the ith coefficient of b(x). The resulting LWE ciphertext is encrypted using the LWE key obtained from the RLWE key (you can convert them into one another).
+	'''
+	# first get the conv(a(x), i)
+	# conv(a(x), i) is just going to be coeffs of a(x), but 'rotated' around x.
+	# that means, if a(x) was [a0, a1, a2, ...., a(N-1)]
+	# then conv(a(x), i) is [ai, a_i-1, ..., a1, a0, -aN-1, -aN-1, ..., -ai+1]
+	ax = FX.a.coeffs
+	conv_ax = np.hstack([
+		ax[:i+1][::-1],
+		-1 * ax[i+1:][::-1]])
+	bi = FX.b.coeffs[i] # just need the ith coefficient's b
+	
+	# creating an LWECiphertext for this
+	return LWECiphertext(
+		a = conv_ax,
+		b = bi
+		)
+\end{minted}
 
 \chapter{Bootstrapping}
 This section describes how bootstrapping works in FHE, by trying to implement a NAND operation between two ciphertexts. But before starting with bootstrapping, little bit of a context.
@@ -606,6 +1536,25 @@ Consider a polynomial $t(x) = -1 - x - x^2 - ... - x^{N/2 - 1} + x^{N/2} + x^{N/
 \begin{center}
 	$\text{IntRotate}(1, t(x)) = x \cdot t(x) = -1 -x -.....- x^{N/2} + x^{N/2 + 1} + ....+ x^{N/2}$
 \end{center}
+
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def generate_tx(N) -> Polynomial:
+	'''
+	This function generates the polynomial i(t).
+	'''
+	# building the polynomial
+	tx_coeffs = np.ones(N, dtype=np.int32)
+	# updating the first half to be -1
+	tx_coeffs[:N//2] = -1
+	tx_poly = Polynomial(N, tx_coeffs)
+	return tx_poly
+\end{minted}
+
 This rotates the coefficients one place to the right. The coefficient of $x^{N-1}$ comes to the front with a - sign. Meaning, now, there are N/2 + 1 coefficients that are -1 and N/2 - 1 that are 1. Now, if we keep rotating it, such that we rotate it by N/2:
 \begin{center}
 	$\text{IntRotate}(N/2, t(x)) = -1 - x -....- x^{N-1}$
@@ -651,6 +1600,49 @@ The above equation looks very similar to the step function, it has the same cond
 \end{center}
 Remember that Encode(2) is not a plaintext but a trivial LWE encryption of 2. This way, we have the step function implemented as bootstrap, and it utilizes BlindRotate and Coeff (ExtractSample) functions to implement it homomorphically.
 
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def create_trivial_rlwe_ciphertext(mx: Polynomial, config: RLWEConfig):
+	'''
+	This function creates a trivial RLWE ciphertext. A trivial RLWE ciphertext is one where the polynomial is one where b is the polynomial itself while a is a zero polynomial.
+	'''
+	a = make_zero_polynomial(config.N)
+	return RLWECiphertext(a, mx, config)
+	
+def create_trivial_lwe_ciphertext(m: LWEPlaintext, config: LWEConfig):
+	'''
+	This function creates a trivial LWE ciphertext, which is an LWECiphertext with a being a vector of zeros and b being the plaintext itself.
+	'''
+	a = np.zeros(config.n, dtype=np.int32)
+	return LWECiphertext(a, m.m)
+\end{minted}
+
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def bootstrap(i: LWECiphertext, bsk: BootstrapKey, R:RLWECiphertext, scale_lwe: LWECiphertext):
+	'''
+	This function implements the bootstrap function to calculate the step operation defined above for the input i. The bsk is the bootstrapping key.
+	This function returns 0 if i is in (-q/4, q/4], else, it returns an lwe encryption of scale.
+	NOTE [IMPORTANT]: Note that if scale is the cleartext np.int32 value, scale_lwe encrypts Encode(scale)/scale.
+	'''
+	# blind rotate R
+	rotated_rlwe = bsk.blindrotate(R, i)
+	# extract sample to get the coefficient of constant
+	coeff_lwe = extract_sample(0, rotated_rlwe)
+	# adding scale_lwe to the output to get the offset-ed result of bootstrapping
+	result_lwe = scale_lwe.add_ciphertext(coeff_lwe)
+	
+	return result_lwe
+\end{minted}
+
 \subsection{Details for FHE Implementation of Step using Boostrapping}
 This section will describe the implementation details for the above defined operation. We want to implement bootstrap that evaluates the step function. Given an LWE ciphertext L (which will be the output of F described in the previous sections). The following things are needed:
 \begin{itemize}
@@ -660,6 +1652,28 @@ This section will describe the implementation details for the above defined oper
 \end{itemize}
 
 Then, the bootstrap operation can be defined as: CAdd(B, ExtractSample(0, BlindRotate(L, R))).
+
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def homomorphic_nand(b0: LWECiphertext, b1: LWECiphertext, constCipher: LWECiphertext, scale_lwe: LWECiphertext, txR:RLWECiphertext, bsk:BootstrapKey) -> LWECiphertext:
+	'''
+	This function implements the nand operation between two inputs b0 and b1 homomorphically.
+	The way it does it is by first evaluating the value of F(b0, b1) = LWE(-3) - b0 - b1 and then running the bootstrap that implements the step function which evaluates the final nand function.
+	Remember that 0 is equivalent to F while 2 is equivalent to T here. The output will be an LWE ciphertext encrypting 0 or 2 as well.
+	constCipher is just the LWE Encryption of -3.
+	'''
+	# calculating constCipher - b0 - b1
+	cc_minus_b0 = constCipher.sub_ciphertext(b0)
+	F_lwe = cc_minus_b0.sub_ciphertext(b1)
+	# call bootstrapping on this
+	nand_lwe = bootstrap(F_lwe, bsk, txR, scale_lwe)
+	
+	return nand_lwe
+\end{minted}
 
 \chapter{TFHE and TFHE-rs: Introduction}
 TFHE is a homomorphic encryption scheme. TFHE-rs is a rust library implemented by ZAMA that implements a variant of TFHE. TFHE follows the same methods and the ciphertexts mentioned in previous chapters. A few of its notable benefits are that it supports evaluation of small lookup tables using programmable bootstrapping, which it implements very efficiently and its runtime is fairly quick compared to other schemes. However. it has a few disadvantages. First, it can only work with small message sizes, meaning, the plaintext modulus (p) is fairly small). Second, the scale difference between p and q is huge (q is much larger), because of which, in vanilla TFHE, you have limited bit-widts to work with (usually 1 - 8 bits). \\

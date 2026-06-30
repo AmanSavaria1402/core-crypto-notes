@@ -1,0 +1,12 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{generate\PYGZus{}tx}\PYG{p}{(}\PYG{n}{N}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{Polynomial}\PYG{p}{:}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function generates the polynomial i(t).}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{c+c1}{\PYGZsh{} building the polynomial}
+	\PYG{n}{tx\PYGZus{}coeffs} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{ones}\PYG{p}{(}\PYG{n}{N}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+	\PYG{c+c1}{\PYGZsh{} updating the first half to be \PYGZhy{}1}
+	\PYG{n}{tx\PYGZus{}coeffs}\PYG{p}{[:}\PYG{n}{N}\PYG{o}{//}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}
+	\PYG{n}{tx\PYGZus{}poly} \PYG{o}{=} \PYG{n}{Polynomial}\PYG{p}{(}\PYG{n}{N}\PYG{p}{,} \PYG{n}{tx\PYGZus{}coeffs}\PYG{p}{)}
+	\PYG{k}{return} \PYG{n}{tx\PYGZus{}poly}
+\end{MintedVerbatim}

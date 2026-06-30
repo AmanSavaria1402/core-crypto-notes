@@ -1,0 +1,52 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{GSWEncryptionKey}\PYG{p}{:}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This class implements the GSW encryption key and methods to encrypt and (possibly) decrypt a gsw ciphertext.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{config}\PYG{p}{:} \PYG{n}{GSWConfig}\PYG{p}{):}
+		\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config} \PYG{o}{=} \PYG{n}{config}
+		\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{key} \PYG{o}{=} \PYG{n}{Polynomial} \PYG{c+c1}{\PYGZsh{} this is just going to be the RLWE encryption key s(x)}
+		\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{rlwe\PYGZus{}key} \PYG{o}{=} \PYG{n}{RLWEEncryptionKey}
+	
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{generate\PYGZus{}key\PYGZus{}from\PYGZus{}rlwe\PYGZus{}key}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{rlwe\PYGZus{}key}\PYG{p}{:} \PYG{n}{RLWEEncryptionKey}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		This function creates the GSWEncryptionKey from the RLWEEncryption key. To be honest, its just the RLWEEncryption key as it is, but for the sake of structure of code and to keep it consistent with other classes. Its a little silly to save both the rlwe\PYGZus{}key object and the key polynomail as well, but eh...}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{key} \PYG{o}{=} \PYG{n}{rlwe\PYGZus{}key}\PYG{o}{.}\PYG{n}{key}
+		\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{rlwe\PYGZus{}key} \PYG{o}{=} \PYG{n}{rlwe\PYGZus{}key}
+	
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{get\PYGZus{}rlwe\PYGZus{}key\PYGZus{}from\PYGZus{}gsw}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		This function returns the rlwe key from the current gsw\PYGZus{}key. Again, its the same, but consistency, formality, something, something...}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{n}{rlwe\PYGZus{}key} \PYG{o}{=} \PYG{n}{RLWEEncryptionKey}\PYG{p}{(}\PYG{n}{config}\PYG{o}{=}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{o}{.}\PYG{n}{rwlecfg}\PYG{p}{)}
+		\PYG{n}{rlwe\PYGZus{}key}\PYG{o}{.}\PYG{n}{key} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{key}
+		\PYG{k}{return} \PYG{n}{rlwe\PYGZus{}key}
+		
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{encrypt}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{fx}\PYG{p}{:} \PYG{n}{Polynomial}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		Encrypt a given polynomial as a GSWCiphertext.}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{c+c1}{\PYGZsh{} first, we need to get the value of k}
+		\PYG{n}{k} \PYG{o}{=} \PYG{n}{get\PYGZus{}k}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{o}{.}\PYG{n}{rwlecfg}\PYG{o}{.}\PYG{n}{q}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{o}{.}\PYG{n}{gsw\PYGZus{}p}\PYG{p}{)}
+		\PYG{n}{gsw\PYGZus{}p} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{o}{.}\PYG{n}{gsw\PYGZus{}p}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} i dont want to write the whole thing}
+		\PYG{c+c1}{\PYGZsh{} make Z: the zero encryption array of shape (2k, 2), note that each row is a RLWE ciphertext, the 2 just means (a(x), b(x))}
+		\PYG{n}{zero\PYGZus{}poly} \PYG{o}{=} \PYG{n}{make\PYGZus{}zero\PYGZus{}polynomial}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{o}{.}\PYG{n}{rwlecfg}\PYG{o}{.}\PYG{n}{N}\PYG{p}{)}
+		\PYG{n}{zero\PYGZus{}poly\PYGZus{}plain} \PYG{o}{=} \PYG{n}{encode\PYGZus{}rlwe}\PYG{p}{(}\PYG{n}{zero\PYGZus{}poly}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{o}{.}\PYG{n}{rwlecfg}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} while for 0 config, the coefficients for both the plaintext and ciphertext are going to be the same, the encryption for RLWE only accepts an RLWEPlaintext and not a Polynomial}
+		\PYG{n}{Z} \PYG{o}{=} \PYG{p}{[}
+		\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{rlwe\PYGZus{}key}\PYG{o}{.}\PYG{n}{encrypt}\PYG{p}{(}\PYG{n}{zero\PYGZus{}poly\PYGZus{}plain}\PYG{p}{)} \PYG{k}{for} \PYG{n}{\PYGZus{}} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{k}\PYG{p}{)}
+		\PYG{p}{]} \PYG{c+c1}{\PYGZsh{} this has shpae (2k, 2)}
+		\PYG{c+c1}{\PYGZsh{} create the GSW ciphertext}
+		\PYG{c+c1}{\PYGZsh{} its created using the equation: fx * B\PYGZus{}p + Z}
+		\PYG{c+c1}{\PYGZsh{} i will implicitly divide the Z matrix in two halves}
+		\PYG{c+c1}{\PYGZsh{} here, ill iterate for k times, and for each iteration, the corresponding index\PYGZsq{}s RLWE of the first half\PYGZsq{}s a gets fx * (p**i) added and the corresponding index of the second half\PYGZsq{}s b gets the same added}
+		\PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{k}\PYG{p}{):}
+			\PYG{c+c1}{\PYGZsh{} multiply fx with the correct power of p}
+			\PYG{n}{scaled\PYGZus{}fx} \PYG{o}{=} \PYG{n}{fx}\PYG{o}{.}\PYG{n}{polynomial\PYGZus{}const\PYGZus{}multiply}\PYG{p}{(}\PYG{n}{gsw\PYGZus{}p}\PYG{o}{**}\PYG{n}{i}\PYG{p}{)}
+			\PYG{c+c1}{\PYGZsh{} add it to first half\PYGZsq{}s a}
+			\PYG{n}{Z}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{o}{.}\PYG{n}{a} \PYG{o}{=} \PYG{n}{Z}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}\PYG{o}{.}\PYG{n}{a}\PYG{o}{.}\PYG{n}{polynomial\PYGZus{}add}\PYG{p}{(}\PYG{n}{scaled\PYGZus{}fx}\PYG{p}{)}
+			\PYG{c+c1}{\PYGZsh{} add it to second half\PYGZsq{}s b}
+			\PYG{n}{Z}\PYG{p}{[}\PYG{n}{i} \PYG{o}{+} \PYG{n}{k}\PYG{p}{]}\PYG{o}{.}\PYG{n}{b} \PYG{o}{=} \PYG{n}{Z}\PYG{p}{[}\PYG{n}{i} \PYG{o}{+} \PYG{n}{k}\PYG{p}{]}\PYG{o}{.}\PYG{n}{b}\PYG{o}{.}\PYG{n}{polynomial\PYGZus{}add}\PYG{p}{(}\PYG{n}{scaled\PYGZus{}fx}\PYG{p}{)}
+		
+		\PYG{k}{return} \PYG{n}{GSWCiphertext}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{p}{,} \PYG{n}{Z}\PYG{p}{)}
+\end{MintedVerbatim}

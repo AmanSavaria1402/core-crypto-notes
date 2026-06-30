@@ -1,0 +1,90 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{Polynomial}\PYG{p}{:}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This class represents a polynomial in the ring Z\PYGZus{}q[x]/(x\PYGZca{}n + 1)}
+\PYG{l+s+sd}{	Note that the coefficients here are in increasing order of degrees of x, [constant, x, x**2, ..., x**N]}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{N}\PYG{p}{,} \PYG{n}{coeffs}\PYG{p}{:} \PYG{n}{np}\PYG{o}{.}\PYG{n}{ndarray}\PYG{p}{):}
+		\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{N} \PYG{o}{=} \PYG{n}{N}
+		\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{coeffs} \PYG{o}{=} \PYG{n}{coeffs}
+	
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}str\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		Print the ciphertext as an equation.}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{n}{prtstr} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}
+		\PYG{n}{nonzeroct} \PYG{o}{=} \PYG{l+m+mi}{0}
+		\PYG{k}{for} \PYG{n}{i}\PYG{p}{,} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n+nb}{enumerate}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{coeffs}\PYG{p}{):}
+			\PYG{k}{if} \PYG{n}{c}\PYG{p}{:}
+				\PYG{k}{if} \PYG{n}{nonzeroct}\PYG{p}{:}
+					\PYG{n}{prtstr} \PYG{o}{+=} \PYG{l+s+s2}{\PYGZdq{} + \PYGZdq{}}
+				\PYG{n}{prtstr} \PYG{o}{+=} \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{c}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{x\PYGZca{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{i}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}
+				\PYG{n}{nonzeroct} \PYG{o}{+=} \PYG{l+m+mi}{1}
+		
+		\PYG{k}{return} \PYG{n}{prtstr}
+	
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{polynomial\PYGZus{}const\PYGZus{}multiply}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{c}\PYG{p}{:}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		Multiply the current polynomial with the given constant integer and return it as a new polynomial.}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{n}{new\PYGZus{}p} \PYG{o}{=} \PYG{n}{Polynomial}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{N}\PYG{p}{,} \PYG{n}{np}\PYG{o}{.}\PYG{n}{multiply}\PYG{p}{(}\PYG{n}{c}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{coeffs}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{))}
+		\PYG{k}{return} \PYG{n}{new\PYGZus{}p}
+	
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{polynomial\PYGZus{}multiply}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{p2}\PYG{p}{:} \PYG{n}{Polynomial}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		Multiply the current polynomial with the given poylnomial and return the new polynomial.}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{c+c1}{\PYGZsh{} get the N from p2}
+		\PYG{n}{p2N} \PYG{o}{=} \PYG{n}{p2}\PYG{o}{.}\PYG{n}{N}
+		\PYG{c+c1}{\PYGZsh{} multiply and pad the results to have 2N\PYGZhy{}1 (thats the longest polynomial you can get)}
+		\PYG{c+c1}{\PYGZsh{} the np.polymul function requires the coefficients in decreasing order of powers or x, se we reverse the current coeff array and then reverse the final output\PYGZsq{}s back again.}
+		\PYG{n}{poly\PYGZus{}prod} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{polymul}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{coeffs}\PYG{p}{[::}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{n}{p2}\PYG{o}{.}\PYG{n}{coeffs}\PYG{p}{[::}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{])[::}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]}
+		\PYG{c+c1}{\PYGZsh{} creating the final answer with padded coeffs}
+		\PYG{n}{poly\PYGZus{}padded} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{N} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+		\PYG{n}{poly\PYGZus{}padded}\PYG{p}{[:}\PYG{n}{poly\PYGZus{}prod}\PYG{o}{.}\PYG{n}{shape}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]]} \PYG{o}{=} \PYG{n}{poly\PYGZus{}prod}
+		
+		\PYG{c+c1}{\PYGZsh{} now, taking modulus of the result (poly\PYGZus{}padded) wrt x\PYGZca{}N + 1}
+		\PYG{n}{result} \PYG{o}{=} \PYG{n}{poly\PYGZus{}padded}\PYG{p}{[:}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{N}\PYG{p}{]}
+		\PYG{n}{result}\PYG{p}{[:}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{\PYGZhy{}=} \PYG{n}{poly\PYGZus{}padded}\PYG{p}{[}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{N}\PYG{p}{:]}
+		\PYG{k}{return} \PYG{n}{Polynomial}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{N}\PYG{p}{,} \PYG{n}{result}\PYG{p}{)}
+	
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{polynomial\PYGZus{}add}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{p2}\PYG{p}{:} \PYG{n}{Polynomial}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		This function adds a polyonmial to the given polynomial and returns the output as a new polynomial.}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{n}{add\PYGZus{}coeffs} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{add}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{coeffs}\PYG{p}{,} \PYG{n}{p2}\PYG{o}{.}\PYG{n}{coeffs}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+		\PYG{k}{return} \PYG{n}{Polynomial}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{N}\PYG{p}{,} \PYG{n}{add\PYGZus{}coeffs}\PYG{p}{)}
+		
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{polynomial\PYGZus{}subtract}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{p2}\PYG{p}{:} \PYG{n}{Polynomial}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		This function subtracts the given polynomial from the current one and returns the new polynomial.}
+\PYG{l+s+sd}{		Note: Its self \PYGZhy{} p2 and not p2 \PYGZhy{} self.}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{n}{sub\PYGZus{}coeffs} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{subtract}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{coeffs}\PYG{p}{,} \PYG{n}{p2}\PYG{o}{.}\PYG{n}{coeffs}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+		\PYG{k}{return} \PYG{n}{Polynomial}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{N}\PYG{p}{,} \PYG{n}{sub\PYGZus{}coeffs}\PYG{p}{)}
+	
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{make\PYGZus{}zero\PYGZus{}polynomial}\PYG{p}{(}\PYG{n}{N}\PYG{p}{:}\PYG{n+nb}{int}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	Declare a zero polynomial and return it. Basically a polynomial where all the coefficients are zeros.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{k}{return} \PYG{n}{Polynomial}\PYG{p}{(}\PYG{n}{N} \PYG{o}{=} \PYG{n}{N}\PYG{p}{,} \PYG{n}{coeffs} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{n}{N}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{))}
+	
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{build\PYGZus{}monomial}\PYG{p}{(}\PYG{n}{N}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{n}{c}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function builds a monomial c * x\PYGZca{}i in the ring R[x]/(x\PYGZca{}N + 1)}
+\PYG{l+s+sd}{	NOTE: Rememeber that the coeffs are in increasing order of powers of x. [constant, x, x**2, ..., x**N]}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{n}{coeffs} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{n}{N}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+	
+	\PYG{c+c1}{\PYGZsh{} find k such that 0 \PYGZlt{}= i + k*N \PYGZlt{} N}
+	\PYG{n}{i\PYGZus{}mod\PYGZus{}n} \PYG{o}{=} \PYG{n}{i} \PYG{o}{\PYGZpc{}} \PYG{n}{N}
+	\PYG{n}{k} \PYG{o}{=} \PYG{p}{(}\PYG{n}{i\PYGZus{}mod\PYGZus{}n} \PYG{o}{\PYGZhy{}} \PYG{n}{i}\PYG{p}{)}\PYG{o}{//}\PYG{n}{N}
+	
+	\PYG{c+c1}{\PYGZsh{} if k is odd then the monomial gets a negative sign because}
+	\PYG{c+c1}{\PYGZsh{} x\PYGZca{}i = (\PYGZhy{}1)\PYGZca{}k + x\PYGZca{}(i + k*N) = (\PYGZhy{}1)\PYGZca{}k + x\PYGZca{}(i \PYGZpc{} N)}
+	\PYG{n}{sign} \PYG{o}{=} \PYG{l+m+mi}{1} \PYG{k}{if} \PYG{n}{k} \PYG{o}{\PYGZpc{}} \PYG{l+m+mi}{2} \PYG{o}{==} \PYG{l+m+mi}{0} \PYG{k}{else} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}
+	\PYG{n}{coeffs}\PYG{p}{[}\PYG{n}{i\PYGZus{}mod\PYGZus{}n}\PYG{p}{]} \PYG{o}{=} \PYG{n}{sign} \PYG{o}{*} \PYG{n}{c}
+	
+	\PYG{k}{return} \PYG{n}{Polynomial}\PYG{p}{(}\PYG{n}{N}\PYG{p}{,} \PYG{n}{coeffs}\PYG{p}{)}
+\end{MintedVerbatim}

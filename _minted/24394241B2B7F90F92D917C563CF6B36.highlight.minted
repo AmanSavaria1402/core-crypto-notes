@@ -1,0 +1,16 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} LWEEncryptioKey Class}
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{encrypt}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{plaintext}\PYG{p}{:}\PYG{n}{LWEPlaintext}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		Encrypt the plaintext message}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{c+c1}{\PYGZsh{} generate a and noise}
+		\PYG{n}{a} \PYG{o}{=} \PYG{n}{generate\PYGZus{}uniform\PYGZus{}sample}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{p}{)}
+		\PYG{n}{e} \PYG{o}{=} \PYG{n}{generate\PYGZus{}normal\PYGZus{}sample}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{p}{)}
+		
+		\PYG{c+c1}{\PYGZsh{} get b}
+		\PYG{n}{b} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{dot}\PYG{p}{(}\PYG{n}{a}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{key}\PYG{p}{)} \PYG{o}{+} \PYG{n}{plaintext}\PYG{o}{.}\PYG{n}{m} \PYG{o}{+} \PYG{n}{e}
+		
+		\PYG{k}{return} \PYG{n}{LWECiphertext}\PYG{p}{(}\PYG{n}{a}\PYG{p}{,} \PYG{n}{b}\PYG{p}{)}
+	\PYG{o}{...}
+\end{MintedVerbatim}

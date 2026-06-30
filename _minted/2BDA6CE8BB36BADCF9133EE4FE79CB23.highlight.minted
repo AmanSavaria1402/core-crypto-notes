@@ -1,0 +1,21 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{extract\PYGZus{}sample}\PYG{p}{(}\PYG{n}{i}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{FX}\PYG{p}{:} \PYG{n}{RLWECiphertext}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{LWECiphertext}\PYG{p}{:}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function extracts the ith coefficient of the polynomial encrypted in the input FX and returns the ith coefficient as an LWE Polynomial. It calculates the ai (a for the LWE ciphertext) using Conv(a(x), i) and the ith coefficient of b(x). The resulting LWE ciphertext is encrypted using the LWE key obtained from the RLWE key (you can convert them into one another).}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{c+c1}{\PYGZsh{} first get the conv(a(x), i)}
+	\PYG{c+c1}{\PYGZsh{} conv(a(x), i) is just going to be coeffs of a(x), but \PYGZsq{}rotated\PYGZsq{} around x.}
+	\PYG{c+c1}{\PYGZsh{} that means, if a(x) was [a0, a1, a2, ...., a(N\PYGZhy{}1)]}
+	\PYG{c+c1}{\PYGZsh{} then conv(a(x), i) is [ai, a\PYGZus{}i\PYGZhy{}1, ..., a1, a0, \PYGZhy{}aN\PYGZhy{}1, \PYGZhy{}aN\PYGZhy{}1, ..., \PYGZhy{}ai+1]}
+	\PYG{n}{ax} \PYG{o}{=} \PYG{n}{FX}\PYG{o}{.}\PYG{n}{a}\PYG{o}{.}\PYG{n}{coeffs}
+	\PYG{n}{conv\PYGZus{}ax} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{hstack}\PYG{p}{([}
+		\PYG{n}{ax}\PYG{p}{[:}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{][::}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{],}
+		\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1} \PYG{o}{*} \PYG{n}{ax}\PYG{p}{[}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{:][::}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]])}
+	\PYG{n}{bi} \PYG{o}{=} \PYG{n}{FX}\PYG{o}{.}\PYG{n}{b}\PYG{o}{.}\PYG{n}{coeffs}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{c+c1}{\PYGZsh{} just need the ith coefficient\PYGZsq{}s b}
+	
+	\PYG{c+c1}{\PYGZsh{} creating an LWECiphertext for this}
+	\PYG{k}{return} \PYG{n}{LWECiphertext}\PYG{p}{(}
+		\PYG{n}{a} \PYG{o}{=} \PYG{n}{conv\PYGZus{}ax}\PYG{p}{,}
+		\PYG{n}{b} \PYG{o}{=} \PYG{n}{bi}
+		\PYG{p}{)}
+\end{MintedVerbatim}

@@ -1,0 +1,12 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{generate\PYGZus{}uniform\PYGZus{}sample}\PYG{p}{(}\PYG{n}{config}\PYG{p}{:} \PYG{n}{LWEConfig}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	Generate an array of \PYGZob{}size\PYGZcb{} elements using a uniform random distribution in the required range}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{c+c1}{\PYGZsh{} get the limits}
+	\PYG{n}{low} \PYG{o}{=} \PYG{p}{(}\PYG{n}{config}\PYG{o}{.}\PYG{n}{q}\PYG{o}{//}\PYG{l+m+mi}{2}\PYG{p}{)} \PYG{o}{*} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}
+	\PYG{n}{high} \PYG{o}{=} \PYG{p}{(}\PYG{n}{config}\PYG{o}{.}\PYG{n}{q}\PYG{o}{//}\PYG{l+m+mi}{2}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} not subtracting \PYGZhy{}1 because high is exclusive in random.randint}
+	\PYG{c+c1}{\PYGZsh{} get the random array}
+	\PYG{n}{a} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{randint}\PYG{p}{(}\PYG{n}{low}\PYG{o}{=}\PYG{n}{low}\PYG{p}{,} \PYG{n}{high}\PYG{o}{=}\PYG{n}{high}\PYG{p}{,} \PYG{n}{size}\PYG{o}{=}\PYG{n}{config}\PYG{o}{.}\PYG{n}{n}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+	\PYG{k}{return} \PYG{n}{a}
+\end{MintedVerbatim}

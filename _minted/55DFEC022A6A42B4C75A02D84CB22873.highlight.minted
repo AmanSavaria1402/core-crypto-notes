@@ -1,0 +1,17 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{cmux}\PYG{p}{(}\PYG{n}{b}\PYG{p}{:} \PYG{n}{GSWCiphertext}\PYG{p}{,} \PYG{n}{l0}\PYG{p}{:} \PYG{n}{RLWECiphertext}\PYG{p}{,} \PYG{n}{l1}\PYG{p}{:}\PYG{n}{RLWECiphertext}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{RLWECiphertext}\PYG{p}{:}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function implements the multiplexer for ciphertexts.}
+\PYG{l+s+sd}{	The homomorphic multiplexer operation homomorphically computes: b(l1 \PYGZhy{} l0) + l0.}
+\PYG{l+s+sd}{	So its basically chaining the following operations: CAdd(CMul(b, CSub(l1, l0)), l0)}
+\PYG{l+s+sd}{	the function returns l0 is b == 0, else l1.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{c+c1}{\PYGZsh{} calculating l1 \PYGZhy{} l0}
+	\PYG{n}{subbed} \PYG{o}{=} \PYG{n}{l1}\PYG{o}{.}\PYG{n}{sub\PYGZus{}ciphertext}\PYG{p}{(}\PYG{n}{l0}\PYG{p}{)}
+	\PYG{c+c1}{\PYGZsh{} calculating product of subbed and b}
+	\PYG{n}{prod} \PYG{o}{=} \PYG{n}{ciphertext\PYGZus{}multiplication}\PYG{p}{(}\PYG{n}{b}\PYG{p}{,} \PYG{n}{subbed}\PYG{p}{)}
+	\PYG{c+c1}{\PYGZsh{} adding l0 to get the cmux result}
+	\PYG{n}{mux\PYGZus{}cipher} \PYG{o}{=} \PYG{n}{prod}\PYG{o}{.}\PYG{n}{add\PYGZus{}ciphertext}\PYG{p}{(}\PYG{n}{l0}\PYG{p}{)}
+	
+	\PYG{k}{return} \PYG{n}{mux\PYGZus{}cipher}
+\end{MintedVerbatim}

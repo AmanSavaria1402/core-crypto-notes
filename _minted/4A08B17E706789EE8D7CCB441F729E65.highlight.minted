@@ -1,0 +1,23 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{BootstrapKey}\PYG{p}{:}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This class implements the bootstrap keys and the methods associated with it, like BlindRotate.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{config}\PYG{p}{:} \PYG{n}{GSWConfig}\PYG{p}{):}
+		\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config} \PYG{o}{=} \PYG{n}{config}
+		\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{key} \PYG{o}{=} \PYG{n}{Sequence}\PYG{p}{[}\PYG{n}{GSWCiphertext}\PYG{p}{]} \PYG{c+c1}{\PYGZsh{} each component (s\PYGZus{}i) from the LWE key will be a GSW ciphertext}
+	
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{generate\PYGZus{}bootstrap\PYGZus{}key}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{lwe\PYGZus{}key}\PYG{p}{:} \PYG{n}{LWEEncryptionKey}\PYG{p}{,} \PYG{n}{gsw\PYGZus{}key}\PYG{p}{:} \PYG{n}{GSWEncryptionKey}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		generate the bootstrapping keys. The bootstrapping keys are just GSW encryption of each component of the LWE\PYGZus{}key using the gsw\PYGZus{}key provided.}
+\PYG{l+s+sd}{		NOTE TO SELF: Im debating whether to make the lwe\PYGZus{}key and gsw\PYGZus{}key members of this class or not. Right now I wont, but if there are other operations that require these keys in addition to the bootstrap keys, I will.}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{n}{bs\PYGZus{}keys} \PYG{o}{=} \PYG{p}{[]} \PYG{c+c1}{\PYGZsh{} this will store the keys}
+		\PYG{c+c1}{\PYGZsh{} looping across each lwe key component and encrypting it}
+		\PYG{k}{for} \PYG{n}{si} \PYG{o+ow}{in} \PYG{n}{lwe\PYGZus{}key}\PYG{o}{.}\PYG{n}{key}\PYG{p}{:}
+			\PYG{c+c1}{\PYGZsh{} first, create a monomial with the si being constant}
+			\PYG{n}{si\PYGZus{}monomial} \PYG{o}{=} \PYG{n}{build\PYGZus{}monomial}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{o}{.}\PYG{n}{rwlecfg}\PYG{o}{.}\PYG{n}{N}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{si}\PYG{p}{)}
+			\PYG{n}{si\PYGZus{}gsw} \PYG{o}{=} \PYG{n}{gsw\PYGZus{}key}\PYG{o}{.}\PYG{n}{encrypt}\PYG{p}{(}\PYG{n}{si\PYGZus{}monomial}\PYG{p}{)}
+			\PYG{n}{bs\PYGZus{}keys}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{si\PYGZus{}gsw}\PYG{p}{)}
+		\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{key} \PYG{o}{=} \PYG{n}{bs\PYGZus{}keys}
+\end{MintedVerbatim}

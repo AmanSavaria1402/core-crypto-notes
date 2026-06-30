@@ -1,0 +1,56 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{convert\PYGZus{}array\PYGZus{}to\PYGZus{}base\PYGZus{}p}\PYG{p}{(}\PYG{n}{a}\PYG{p}{:} \PYG{n}{np}\PYG{o}{.}\PYG{n}{ndarray}\PYG{p}{,} \PYG{n}{p}\PYG{p}{,} \PYG{n}{q}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function converts each element into a its base p\PYGZhy{}representation, given the values of q (ciphertext modulus) and p (not plaintext modulus). Note that the representation for each element in a will be a sequence of a fixed length.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{n}{log\PYGZus{}p} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{log2}\PYG{p}{(}\PYG{n}{p}\PYG{p}{)}\PYG{o}{.}\PYG{n}{astype}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+	\PYG{n}{k} \PYG{o}{=} \PYG{n}{get\PYGZus{}k}\PYG{p}{(}\PYG{n}{q} \PYG{o}{=} \PYG{n}{q}\PYG{p}{,} \PYG{n}{p} \PYG{o}{=} \PYG{n}{p}\PYG{p}{)}
+	\PYG{n}{p\PYGZus{}half} \PYG{o}{=} \PYG{n}{p}\PYG{o}{//}\PYG{l+m+mi}{2}
+	\PYG{n}{offset} \PYG{o}{=} \PYG{n}{p\PYGZus{}half} \PYG{o}{*} \PYG{n}{np}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{([}\PYG{n}{p}\PYG{o}{**}\PYG{n}{i} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{k}\PYG{p}{)])}
+	\PYG{n}{mask} \PYG{o}{=} \PYG{n}{p} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1} \PYG{c+c1}{\PYGZsh{} this in binary is exactly log\PYGZus{}p ones.}
+	
+	\PYG{n}{a\PYGZus{}offset} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{uint32}\PYG{p}{(}\PYG{n}{a} \PYG{o}{+} \PYG{n}{offset}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} need to set this to uint 32 as the the p\PYGZhy{}bit representation will be calculated from unsigned integers and then converted to signed}
+	\PYG{c+c1}{\PYGZsh{} return a\PYGZus{}offset}
+	
+	\PYG{n}{output} \PYG{o}{=} \PYG{p}{[]} \PYG{c+c1}{\PYGZsh{} this will store the output base\PYGZhy{}p representation for each element}
+	\PYG{c+c1}{\PYGZsh{} NOTE: output is a list of k numpy arrays. Each numpy array stores the ith p\PYGZhy{}bit representation of the corresponding original input.}
+	\PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{k}\PYG{p}{):}
+	\PYG{n}{output}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}
+	\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{right\PYGZus{}shift}\PYG{p}{(}\PYG{n}{a\PYGZus{}offset}\PYG{p}{,} \PYG{n}{i} \PYG{o}{*} \PYG{n}{log\PYGZus{}p}\PYG{p}{)} \PYG{o}{\PYGZam{}} \PYG{n}{mask}\PYG{p}{)}\PYG{o}{.}\PYG{n}{astype}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)} \PYG{o}{\PYGZhy{}} \PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{(}\PYG{n}{p\PYGZus{}half}\PYG{p}{)}
+	\PYG{p}{)}
+	
+	\PYG{k}{return} \PYG{n}{output}
+	
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{convert\PYGZus{}base\PYGZus{}p\PYGZus{}to\PYGZus{}int\PYGZus{}array}\PYG{p}{(}\PYG{n}{a}\PYG{p}{:} \PYG{n}{Sequence}\PYG{p}{[}\PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{],} \PYG{n}{p}\PYG{p}{:} \PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function takes as input the p\PYGZhy{}bit representations of an array, and converts it back into integer. a should be a list or a iterator of ndarrays where each ndarray contains the ith p\PYGZhy{}bit representation of the integer.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{c+c1}{\PYGZsh{} calculate x from the representation: x = x\PYGZus{}0 + x\PYGZus{}1 p + ... + x\PYGZus{}k\PYGZhy{}1 p\PYGZca{}k\PYGZhy{}1}
+	\PYG{n}{decimal\PYGZus{}repr} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{a}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]),} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+	\PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{a}\PYG{p}{)):}
+	\PYG{n}{decimal\PYGZus{}repr} \PYG{o}{+=} \PYG{p}{(}\PYG{n}{a}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{*} \PYG{p}{(}\PYG{n}{p}\PYG{o}{**}\PYG{n}{i}\PYG{p}{))}\PYG{o}{.}\PYG{n}{astype}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+	\PYG{k}{return} \PYG{n}{decimal\PYGZus{}repr}
+	
+	\PYG{c+c1}{\PYGZsh{} defining base p representation functions for polynomials}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{get\PYGZus{}base\PYGZus{}p\PYGZus{}from\PYGZus{}polynomial}\PYG{p}{(}\PYG{n}{poly}\PYG{p}{:} \PYG{n}{Polynomial}\PYG{p}{,} \PYG{n}{p}\PYG{p}{:} \PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{,} \PYG{n}{q}\PYG{p}{:} \PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{Sequence}\PYG{p}{[}\PYG{n}{Polynomial}\PYG{p}{]:}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function converts each coefficient of the coefficients of the given polynomial and returns them as a set of polynomials (sequence of the polynomials is very important).}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{n}{coeffs} \PYG{o}{=} \PYG{n}{poly}\PYG{o}{.}\PYG{n}{coeffs}
+	\PYG{c+c1}{\PYGZsh{} converting coeffs into base p representation}
+	\PYG{n}{coeffs\PYGZus{}base\PYGZus{}p} \PYG{o}{=} \PYG{n}{convert\PYGZus{}array\PYGZus{}to\PYGZus{}base\PYGZus{}p}\PYG{p}{(}\PYG{n}{coeffs}\PYG{p}{,} \PYG{n}{p}\PYG{p}{,} \PYG{n}{q}\PYG{p}{)}
+	\PYG{c+c1}{\PYGZsh{} create a polynomial for each array}
+	\PYG{n}{base\PYGZus{}p\PYGZus{}poly} \PYG{o}{=} \PYG{p}{[}\PYG{n}{Polynomial}\PYG{p}{(}\PYG{n}{N}\PYG{o}{=}\PYG{n}{poly}\PYG{o}{.}\PYG{n}{N}\PYG{p}{,} \PYG{n}{coeffs} \PYG{o}{=} \PYG{n}{ic}\PYG{p}{)} \PYG{k}{for} \PYG{n}{ic} \PYG{o+ow}{in} \PYG{n}{coeffs\PYGZus{}base\PYGZus{}p}\PYG{p}{]}
+	
+	\PYG{k}{return} \PYG{n}{base\PYGZus{}p\PYGZus{}poly}
+	
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{get\PYGZus{}poly\PYGZus{}from\PYGZus{}base\PYGZus{}p}\PYG{p}{(}\PYG{n}{base\PYGZus{}p\PYGZus{}polys}\PYG{p}{:} \PYG{n}{Sequence}\PYG{p}{[}\PYG{n}{Polynomial}\PYG{p}{],} \PYG{n}{p}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{Polynomial}\PYG{p}{:}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function calculates the polynomial from the given base p representation polynomials.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{c+c1}{\PYGZsh{} get all the coefficients from the sequence}
+	\PYG{n}{base\PYGZus{}p\PYGZus{}coeffs} \PYG{o}{=} \PYG{p}{[}\PYG{n}{p}\PYG{o}{.}\PYG{n}{coeffs} \PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{base\PYGZus{}p\PYGZus{}polys}\PYG{p}{]}
+	\PYG{c+c1}{\PYGZsh{} get the integer coeffs from the list}
+	\PYG{n}{int\PYGZus{}coeffs} \PYG{o}{=} \PYG{n}{convert\PYGZus{}base\PYGZus{}p\PYGZus{}to\PYGZus{}int\PYGZus{}array}\PYG{p}{(}\PYG{n}{base\PYGZus{}p\PYGZus{}coeffs}\PYG{p}{,} \PYG{n}{p}\PYG{p}{)}
+	\PYG{k}{return} \PYG{n}{Polynomial}\PYG{p}{(}\PYG{n}{N}\PYG{o}{=}\PYG{n}{base\PYGZus{}p\PYGZus{}polys}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{N}\PYG{p}{,} \PYG{n}{coeffs} \PYG{o}{=} \PYG{n}{int\PYGZus{}coeffs}\PYG{p}{)}
+\end{MintedVerbatim}

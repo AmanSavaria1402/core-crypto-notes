@@ -1,0 +1,16 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{bootstrap}\PYG{p}{(}\PYG{n}{i}\PYG{p}{:} \PYG{n}{LWECiphertext}\PYG{p}{,} \PYG{n}{bsk}\PYG{p}{:} \PYG{n}{BootstrapKey}\PYG{p}{,} \PYG{n}{R}\PYG{p}{:}\PYG{n}{RLWECiphertext}\PYG{p}{,} \PYG{n}{scale\PYGZus{}lwe}\PYG{p}{:} \PYG{n}{LWECiphertext}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function implements the bootstrap function to calculate the step operation defined above for the input i. The bsk is the bootstrapping key.}
+\PYG{l+s+sd}{	This function returns 0 if i is in (\PYGZhy{}q/4, q/4], else, it returns an lwe encryption of scale.}
+\PYG{l+s+sd}{	NOTE [IMPORTANT]: Note that if scale is the cleartext np.int32 value, scale\PYGZus{}lwe encrypts Encode(scale)/scale.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{c+c1}{\PYGZsh{} blind rotate R}
+	\PYG{n}{rotated\PYGZus{}rlwe} \PYG{o}{=} \PYG{n}{bsk}\PYG{o}{.}\PYG{n}{blindrotate}\PYG{p}{(}\PYG{n}{R}\PYG{p}{,} \PYG{n}{i}\PYG{p}{)}
+	\PYG{c+c1}{\PYGZsh{} extract sample to get the coefficient of constant}
+	\PYG{n}{coeff\PYGZus{}lwe} \PYG{o}{=} \PYG{n}{extract\PYGZus{}sample}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{rotated\PYGZus{}rlwe}\PYG{p}{)}
+	\PYG{c+c1}{\PYGZsh{} adding scale\PYGZus{}lwe to the output to get the offset\PYGZhy{}ed result of bootstrapping}
+	\PYG{n}{result\PYGZus{}lwe} \PYG{o}{=} \PYG{n}{scale\PYGZus{}lwe}\PYG{o}{.}\PYG{n}{add\PYGZus{}ciphertext}\PYG{p}{(}\PYG{n}{coeff\PYGZus{}lwe}\PYG{p}{)}
+	
+	\PYG{k}{return} \PYG{n}{result\PYGZus{}lwe}
+\end{MintedVerbatim}

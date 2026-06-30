@@ -1,0 +1,16 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} RLWEEncryptionKey Code...}
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{decrypt}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{cx}\PYG{p}{:} \PYG{n}{RLWECiphertext}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{Polynomial}\PYG{p}{:}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		Decrypt the given ciphertext, decode it and return the cleartext polynomial.}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{c+c1}{\PYGZsh{} separate a and b}
+		\PYG{n}{ca} \PYG{o}{=} \PYG{n}{cx}\PYG{o}{.}\PYG{n}{a}
+		\PYG{n}{cb} \PYG{o}{=} \PYG{n}{cx}\PYG{o}{.}\PYG{n}{b}
+		\PYG{c+c1}{\PYGZsh{} subtracting \PYGZlt{}a, s\PYGZgt{} from b}
+		\PYG{n}{subbed} \PYG{o}{=} \PYG{n}{cb}\PYG{o}{.}\PYG{n}{polynomial\PYGZus{}subtract}\PYG{p}{(}\PYG{n}{ca}\PYG{o}{.}\PYG{n}{polynomial\PYGZus{}multiply}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{key}\PYG{p}{))}
+		\PYG{c+c1}{\PYGZsh{} decode: divide by delta to remove the noise and take mod wrt p}
+		\PYG{n}{decoded} \PYG{o}{=} \PYG{n}{decode\PYGZus{}rlwe}\PYG{p}{(}\PYG{n}{subbed}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{config}\PYG{p}{)}
+		
+		\PYG{k}{return} \PYG{n}{decoded}
+\end{MintedVerbatim}

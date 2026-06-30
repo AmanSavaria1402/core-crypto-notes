@@ -1,0 +1,42 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} LWECiphertext Class}
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{add\PYGZus{}ciphertext}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{other}\PYG{p}{:} \PYG{n}{LWECiphertext}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		This function adds a given ciphertext to the current ciphertext and returns a new ciphertext.}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{c+c1}{\PYGZsh{} adding their as and bs}
+		\PYG{n}{added\PYGZus{}a} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{add}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{other}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+		\PYG{n}{added\PYGZus{}b} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{add}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{b}\PYG{p}{,} \PYG{n}{other}\PYG{o}{.}\PYG{n}{b}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+	
+		\PYG{c+c1}{\PYGZsh{} \PYGZsh{} taking mods just to see if this works, but we have to take mod wrt q}
+		\PYG{c+c1}{\PYGZsh{} q = config.q}
+		\PYG{c+c1}{\PYGZsh{} added\PYGZus{}a = ((added\PYGZus{}a + (q//2)) \PYGZpc{} q) \PYGZhy{} (q//2)}
+		\PYG{c+c1}{\PYGZsh{} added\PYGZus{}b = ((added\PYGZus{}b + (q//2)) \PYGZpc{} q) \PYGZhy{} (q//2) \PYGZsh{} im getting overflow errors when doing this}
+		
+		\PYG{k}{return} \PYG{n}{LWECiphertext}\PYG{p}{(}\PYG{n}{added\PYGZus{}a}\PYG{p}{,} \PYG{n}{added\PYGZus{}b}\PYG{p}{)}
+		
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{sub\PYGZus{}ciphertext}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{other}\PYG{p}{:}\PYG{n}{LWECiphertext}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		This function subtracts the other ciphertext from the current one.}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{n}{sub\PYGZus{}a} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{subtract}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{other}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+		\PYG{n}{sub\PYGZus{}b} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{subtract}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{b}\PYG{p}{,} \PYG{n}{other}\PYG{o}{.}\PYG{n}{b}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+		\PYG{k}{return} \PYG{n}{LWECiphertext}\PYG{p}{(}\PYG{n}{sub\PYGZus{}a}\PYG{p}{,} \PYG{n}{sub\PYGZus{}b}\PYG{p}{)}
+	
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{mul\PYGZus{}plaintext}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{other}\PYG{p}{:}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		Multiply the other integer to current ciphertext}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{c+c1}{\PYGZsh{} we just need to multiply the give plaintext to both a and b}
+		\PYG{n}{mul\PYGZus{}a} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{multiply}\PYG{p}{(}\PYG{n}{other}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+		\PYG{n}{mul\PYGZus{}b} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{multiply}\PYG{p}{(}\PYG{n}{other}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{b}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+		\PYG{k}{return} \PYG{n}{LWECiphertext}\PYG{p}{(}\PYG{n}{mul\PYGZus{}a}\PYG{p}{,} \PYG{n}{mul\PYGZus{}b}\PYG{p}{)}
+	
+	\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{add\PYGZus{}plaintext}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{other}\PYG{p}{:}\PYG{n}{LWEPlaintext}\PYG{p}{):}
+\PYG{+w}{		}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{		Add the other plaintext to the current ciphertext. This function assumes that the input plaintext message is already encoded to R\PYGZus{}q.}
+\PYG{l+s+sd}{		\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+		\PYG{c+c1}{\PYGZsh{} we just need to scale other and then add it to b}
+		\PYG{n}{addb} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{add}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{b}\PYG{p}{,} \PYG{n}{other}\PYG{o}{.}\PYG{n}{m}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+		\PYG{k}{return} \PYG{n}{LWECiphertext}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{a}\PYG{p}{,} \PYG{n}{addb}\PYG{p}{)}
+\end{MintedVerbatim}
