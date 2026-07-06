@@ -24,15 +24,42 @@
 
 \begin{document}
 \maketitle
+\setcounter{chapter}{-1}
 
-\chapter*{About the notes}
-This document contains my notes that I took when studying about the TFHE scheme on a lower level. These are essentially just the basics, and it does not contain any advanced topics/improvements etc. it is divided into two modules/parts etc which I didnt do a good job of differentiating with chapter names. This 'disclaimer' sort of a chapter does that.\newline
+\chapter{About the notes: Roadmap}
+This document contains my notes that I took when studying about the TFHE scheme on a lower level. It is divided into multiple modules/parts etc which I didnt do a good job of differentiating with chapter names. This 'disclaimer' sort of a chapter does that.\newline
 \newline
-The first section spans from the first to the second last chapter. It has an in-depth explanation of FHE encryption, arithmetic and operations such as bootstrapping. These chapters are written by following \hyperref[ref:blog]{Daniel Lowengrub's blog}. These chapters start off by describing the LWE ciphertext to work with scalars, their arithmetic, and then moves on to RLWE ciphertexts to work with polynomials. After that, it moves to GSW ciphertexts and talks about ciphertext-ciphertext multiplication and then describes in detail operations used in bootstrapping. It finally ends with implementing the NAND operation using bootstrapping. Note that everything that was mentioned in these chapters have been implemented in python from scratch just using numpy for better understanding. You can find the code in \href{https://github.com/AmanSavaria1402/FHE_implementation}{this repository}. \newline
+The first section spans from the first to the fifth chapter. It has an in-depth explanation of FHE encryption, arithmetic and operations such as bootstrapping. These chapters are written by following \hyperref[ref:blog]{Daniel Lowengrub's blog}. These chapters start off by describing the LWE ciphertext to work with scalars, their arithmetic, and then moves on to RLWE ciphertexts to work with polynomials. After that, it moves to GSW ciphertexts and talks about ciphertext-ciphertext multiplication and then describes in detail operations used in bootstrapping. It finally ends with implementing the NAND operation using bootstrapping. Note that everything that was mentioned in these chapters have been implemented in python from scratch just using numpy for better understanding. You can find the code in \href{https://github.com/AmanSavaria1402/FHE_implementation}{this repository}.
+A small description of important terms:
+\begin{itemize}
+	\item \textbf{LWE}: An LWE ciphertext encrypts an integer. It is a collection of two elements (a, b), with a being a vector of n elements, sampled randomly from a discrete uniform distribution, and b being an integer. b = $ a\cdot s $ + e, where s is a vector and is called a secret key, while e is an integer called the noise and is sampled from a discrete normal distribution. This is discussed in detail more in chapter 1.
+	\item \textbf{RLWE}: RLWE encrypts a polynomial. Like LWE, it is also a collection of (a, b), but this time, they both are polynomials. The relationship between a and b is the same, but the noise and secret key are now polynomials instead of being an integer or a vector. This is discussed in detail in chatper 2.
+	\item \textbf{Homomorphic NAND}: The homomorphic NAND operation is the NAND operation applied on two LWE ciphertexts, which encrypt boolean True or False. Since LWE ciphertexts encrypt integers, the boolean values  are represented as 2 (True) and 0 (False). The NAND operation is evaluated by first passing the two inputs through a function that performs a linear transform to get a single LWE output, which is then fed into a bootstrapping operation to evaluate the NAND operation. This is discussed in detail in chapter 5.
+\end{itemize}
+The second section is just chapter 6. It was written based on the \hyperref[ref:handbook]{TFHE-rs handbook}. This chapter goes specifically into TFHE, and describes the different kinds of ciphertexts and operations in TFHE. It has a fair bit of overlap (actually a lot of overlap) with the first section, as almost all the operations are the same and implemented more or less, similarly, except that TFHE uses the more 'general' GLWE, GLev and GGSW ciphertexts which while more complex, follow the same rules and steps for almost everything.\newline
 \newline
-The second section is just the last chapter. It was written based on the \hyperref[ref:handbook]{TFHE-rs handbook}. This chapter goes specifically into TFHE, and describes the different kinds of ciphertexts and operations in TFHE. It has a fair bit of overlap (actually a lot of overlap) with the first section, as almost all the operations are the same and implemented more or less, similarly, except that TFHE uses the more 'general' GLWE, GLev and GGSW ciphertexts which while more complex, follow the same rules and steps for almost everything.
+The third section discusses PBS (Programmable Bootstrapping) further by implementing it from scratch for the sign operation. The sign operation is defined as follows:
+\begin{equation}
+	\text{sign}(x) = 
+	\begin{cases}
+		0 & \text{if} \ x \leq 0\\
+		1 &  \text{otherwise}
+	\end{cases}
+\end{equation}
+This chapter provides a hands on example with implementation to explain how to create the TLU polynomial and then use it to evaluate a function on an LWE ciphertext using bootstrapping. It also talks about how the domain changes if the function to be evaluated is not negacyclic and why. Finally, it talks a little about bivariate PBS, that utilizes a packing trick to pack two ciphertexts into 1 so that PBS can be implemented to evaluate functions that take two inputs while traditional PBS only takes one LWE ciphertext. This is also done with an example of showing how to use this packing trick to implement PBS to evaluate the max operation between two ciphertexts.\newline
 
-\textbf{IMPORTANT THING TO NOTE:} There might be places where I denoted a ring as $R_q(x)/ (x^N + 1)$. This is a typo, theyre supposed to be $X_q(x)/ (x^N + 1)$ as the coefficients are integers.
+\textbf{IMPORTANT THING TO NOTE:} There might be places where I denoted a ring as $R_q(x)/ (x^N + 1)$. This is a typo, theyre supposed to be $Z_q(x)/ (x^N + 1)$ as the coefficients are integers.
+
+\section{Important Abbreviations/Notations}
+\begin{itemize}
+	\item LWE: Learning With Errors Ciphertext/Problem
+	\item RLWE: Ring Learning With Errors Ciphertext/Problem
+	\item  PBS: Programmable Bootstrapping
+	\item $\mathbb{Z}_q/(X^N + 1)$: A polynomial ring, where the polynomials have a max degree of N-1 and the coefficients are modulus q, $q \in \mathbb{Z}_+$. 
+	\item Cleartext: Not an abbreviation but important. A regular number before being processed/encrypted is called cleartext.
+	\item Plaintext: Not an abbreviation but important. A plaintext is the encoded cleartext.
+	\item  TLU/LUT: A Lookup Table. Used for bootstrapping.
+\end{itemize}
 
 \chapter{LWE: Working With Scalars.}
 
@@ -1972,6 +1999,178 @@ $\widetilde{f(i)}$ is an encoding of the function output $f(i)$. Another way to 
 
 Note that this is the basic PBS operation. There are other types of PBS operations that have their own characteristics.
 
+\chapter{PBS Implementation In Depth}
+Please note that this chapter might contain some redundancy as I discuss the points already discussed in the previous chapters, however, here I try to go into a little more detail and implement some more PBS operations.\\
+Programmable Bootstrapping, as studied above, does two things:
+\begin{itemize}
+	\item Reduces/refreshes noise in a polynomial.
+	\item Evaluates a function (in TFHE).
+\end{itemize}
+However, there are things that should be taken care of when PBS is being implemented for a specific function. The most important thing that needs to be remembered is that it takes as input an LWE ciphertext and outputs an LWE ciphertext too, and is traditionally, a univariate function. For bootstrapping, you need something called as the \textbf{Redundant Lookup Table} is very important.
+
+\section{Redundant Lookup Table/TLU}
+Lets take an example of a bootstrapping operation that tries to remove noise during the decryption process. Meaning, the input to the function is $\Delta \cdot m + e \in \mathbb{Z}_q$, and it outputs $m \in \mathbb{Z}_p$. However, $p < q$, and thus, a number of values of $\Delta \cdot m + e$ will correspond to the same m.  This means that there is a redundancy.
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\linewidth]{figures/TLU}
+	\caption{Image showing transformation and redundancy. Taken from \href{https://www.zama.org/post/tfhe-deep-dive-part-4}{TFHE-Deep Dive, part 4}}
+	\label{fig:tlu}
+\end{figure}
+The collection of cell blocks that correspond to the same value are called mega-cases. Here, one thing to notice is that the case for 0 is split, with half of it being on either ends. This is because at m = 0, the noise can put it on either side of the number line, positive noise moves it left while negative noise moves it right.\footnote{Assuming that its modeled as unsigned integer and the first half is used for positive while the second half is used for negative integers, as is the case in TFHE-rs.} \newpage
+
+\subsection{Now why is this important?}
+As studied earlier, bootstrapping is evaluated using rotation (blind-rotation) of a polynomial to be exact. After which, you extract value from a specific place, which is pre-defined, for example, in the previous chapters, the coefficient of $x^0$ was extracted which was the output of the bootstrapping operation. The TLU defined above is actually modelled as a (trivially encrypted) polynomial with the coefficients being the elements of the output of the TLU set up such that rotating this LUT ciphertext brings the correct output from one of the many redundant positions in the mega case to the position that is being observed, which gives us the correct answer.
+
+\section{Negacyclic Property and PBS}
+Here, we talk about the usable domains and how does that get affected by the negacyclic property of the ring.\\
+Remember that, a negacyclic ring $\mathbb{Z}_q/(X^N + 1)$ has an order of 2N, meaning, $X^N \equiv -1$ and $X^{2N }\equiv 1$. And therefore, for any polynomial from this ring, you need to rotate it, by 2N to get the original polynomial back. Also, rotating a polynomial $f(x)$ by N, gives you its negation $-f(x)$. Therefore, the actual domain of the rotation input becomes 2N and not N. You dont want to push further because after that it just loops around. However, the latter half of the rotation outputs is just the negation of the former half (think: rotate(i, F) = - rotate(i+N, f)), and you cant change that.\\
+The LUT polynomial also belongs to the ring and thus, also follows the same properties. Now if this was used to evaluate a function that is negacyclic, meaning f(x+N) = -f(x), then the two things 'fit' well with each other, and you can use the entire domain of 2N, but if it isnt, then it becomes an issue, because in the rotation, the only thing you can really control is the first half, upto N. And since you need to do a modulus switch from q to 2N, ensuring that post switch, the input stays within N ([-N/2, N/2)), you can only use half of your plaintext domain.
+
+\section{Sign Operation Using PBS}
+This section describes implementing the sign operation using bootstrapping. The sign function is given as:
+\begin{equation}
+	\text{sign}(x) = 
+	\begin{cases}
+		0 & \text{if} \ x \leq 0\\
+		1 & otherwise
+	\end{cases}
+\end{equation}
+The most important thing for any PBS operation that evaluates any function is to correctly create/set up the TLU polynomial. Once the polynomial is set up correctly, the actual bootstrapping portion remains the same, first, homomorphically rotating the polynomial based on the input, followed by a sample extract extracting the coefficient corresponding to $x^0$.
+\subsubsection*{T: The TLU polynomial}
+Consider a polynomial:
+\begin{center}
+	$\mathbf{T} = 0 + 0x + 0x^2 + ... + 0x^{N/2 - 1} - x^{N/2} - x^{N/2 + 1} - ... - x^{N-1}$
+\end{center}
+Try rotating this polynomial:\\
+\begin{center}
+	$\text{Rotate}(1, T) = 1 + 0x + ... + 0x^{N/2} - x^{N/2 - 1} - ... - x^{N-1}$\\
+	$\text{Rotate}(N/2, T) = 1 + x + ... + x^{N/2 -1 } - 0x^{N/2} - ... - 0x^{N-1}$\\
+	$\text{Rotate}(N, T) = 0 + 0x + ... + 0x^{N/2 -1 } + x^{N/2} + ... + 1x^{N-1}$\\
+	$\text{Rotate}(-1, T) = 0 + 0x + 0x^2 + ... + 0x^{N/2 - 2} - x^{N/2 - 1} - x^{N/2} - ... - x^{N-2} - 0x^{N-1}$
+\end{center}
+Now for each of the rotate results, if you extract the first coefficient:
+\begin{center}
+	$\text{ExtractSample}(0, \text{Rotate}(1, T)) = 1$\\
+	$\text{ExtractSample}(0, \text{Rotate}(N/2, T)) = 1$\\
+	$\text{ExtractSample}(0, \text{Rotate}(N, T)) = 0$\\
+	$\text{ExtractSample}(0, \text{Rotate}(-1, T)) = 0$\\
+	$\text{ExtractSample}(0, \text{Rotate}(0, T)) = 0$
+\end{center}
+This can be generalized as:
+\begin{equation}
+	\text{ExtractSample}(0, \text{Rotate}(i, T)) = 
+	\begin{cases}
+		1 & \text{if} \ 0 < i \leq N/2\\
+		0 & \text{if} \ -N/2 < i \leq 0
+	\end{cases}
+\end{equation}
+This polynomial can be used as TLU for our range of polynomials. This will work for our range. As we know, this is not a negacyclic polynomial, so, we can only use $\frac{p}{2}$ values, which means, the input will be in the range $[\frac{-p}{4}, \frac{p}{4})$. On doing modulus scaling, this becomes:
+\begin{center}
+	$[\frac{-p}{4}, \frac{p}{4}) = [\frac{-p}{4} \cdot \Delta, \frac{p}{4} \cdot \Delta) = [\frac{-N}{2}, \frac{N}{2})$
+\end{center}
+In this range, the sign will be correctly defined using this polynomial.\\ \newline
+\textbf{A few examples} (N = 1024, p = 16, q = $2^{32}$):\\
+\begin{itemize}
+	\item Consider you want to find the sign of x = 3. On encoding and scheme switching, you get:
+	\begin{center}
+		$\frac{q}{p} \cdot 3 \cdot \frac{2N}{q} = \frac{3N}{8}$
+	\end{center}
+	Which is smaller than N/2 and hence, on performing rotation with this input and extracting the coefficient, we get 1.
+	\item Consider x = -2. On encoding and switching, you get:
+	\begin{center}
+		$\frac{q}{p} \cdot -2 \cdot \frac{2N}{q} = \frac{-N}{4}$
+	\end{center}
+	Which is larger than -N/2, and hence, on performing rotation with this input and extracting the coefficient, we get 0.
+\end{itemize}
+
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+# T generation
+# generating the polynomial
+tx_coeffs = np.zeros(config.N, dtype=np.int32)
+tx_coeffs[config.N//2:] = -1
+tx = Polynomial(N=config.N, coeffs=tx_coeffs)
+# encoding tx
+encode_multiplier = encode_plaintext(1, lweconfig)
+# generating a trivial RLWE polynomial for tx
+tx_rlwe = create_trivial_rlwe_ciphertext(tx.polynomial_const_multiply(encode_multiplier.m), config)
+
+# bootstrapping function
+def sign_bootstrap(i: LWECiphertext, bsk: BootstrapKey, tx_cipher: RLWECiphertext):
+	'''
+	This function performs PBS which evaluates the sign function. This will return an LWE ciphertext encrypting 0 if the input was negative or 0, 1 otherwise.
+	'''
+	# need to implement coeff(0, blindrotate(i, tx_cipher))
+	# blind rotate tx_cipher
+	rotated_tx = bsk.blindrotate(tx_cipher, i)
+	# extract the 0th coefficient
+	coeff_lwe = extract_sample(0, rotated_tx)
+	return coeff_lwe
+\end{minted}
+\newpage
+\section{Bivariate PBS: Max using PBS}
+While PBS traditionally only takes a single LWE ciphertext as input, there might be situations where you want to evaluate a PBS on two LWE ciphertexts, for example, calculating min, max etc, where it might not be trivial to reduce them into a single ciphertext. In these situations, you can use a \textit{packing trick}\footnote{Please be aware that I got this packing trick from claude, which mentions that this is what is being used in bivariate PBS in TFHE-rs (bivariate PBS functions exist in higher level APIs), but I haven't checked the source code to confirm this, but the method seems to be working.} to implement this.
+\subsubsection{What is this packing trick?}
+We want to somehow convert the two LWE ciphertexts into a single LWE ciphertext, such that both the ciphertexts are intact in this new \textit{packed} polynomial. One way to do this is the following:
+\begin{itemize}
+	\item You have the regular parameters p, q, and n for LWE.
+	\item You create another parameter, lets called it $p_b$, such that $p_b$ < 2p. It should be small enough such that atleast two $p_b$s can fit in p. This $p_b$ is what actually defines the range of the cleartext now.
+	\item Encode and encrypt the cleartexts using the actual plaintext modulus.
+	\item Pack them using the following relationship. For two LWE ciphertexts, a and b:
+	\begin{center}
+		$p = a \cdot p_b + b$
+	\end{center}
+	\item For creating the LUT \footnote{In the previous section, we created the LUT polynomial ourselves, but this one is non-trivial, and thus, we will use TFHE-rs's built in accumulator, which takes logic in plaintext and then creates the LUT polynomial dynamically. This is only used for creating the LUT and not when working with ciphertexts, and thus, it can use operations such as divide etc.}, unpack the ciphertexts, by doing
+	\begin{center}
+		$a = p / p_b$\\
+		$b = p \ \% \ p_b$
+	\end{center}
+\end{itemize}
+This allows for bivariate PBS. A few things to note with this (these might be a little specific to TFHE-rs's core-crypto):
+\begin{itemize}
+	\item Since core-crypto works with unsigned integers, the way signed integers are represented is that the first half is used for positive signed values and the second half of the unsigned range is used to represent corresponding negative signed values. And since here we are creating our values mod $p_b$, before converting the signed cleartext to unsigned, you should take a modulus wrt $p_b$. 
+\end{itemize}
+
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+// RUST CODE TFHE-rs
+// --- ENCODING MESSAGE ---
+let p = 1u64 << 8; // plaintext modulus = 2^8
+let p_1 = 1u64 << 4; // this will actually define the available range for the clear messages. The idea is that the 2 LWE ciphertexts will be packed into one and then in the PBS, they will be extracted to allow for bivariate PBS. This allows for operations such as max, min etc.
+let delta = (1u64 << 63) / p;
+
+let msg1_clear = 7i8; // Im using 8 bit right now because with this noise level it works well. I will move up if needed but for now, im using 8 bit as it anyway is working for our model.
+let msg2_clear = -3i8;
+let msg1_clear_reduced = (msg1_clear as i64).rem_euclid(p_1 as i64) as u64;
+let msg2_clear_reduced = (msg2_clear as i64).rem_euclid(p_1 as i64) as u64;
+
+// MAX PBS ACCUMULATOR
+let max_accumulator: GlweCiphertextOwned<u64> = generate_programmable_bootstrap_glwe_lut(
+	polynomial_size,
+	glwe_dimension.to_glwe_size(),
+	p as usize,
+	ciphertext_modulus,
+	delta,
+	|x: u64| { // this is 128 because p is 2^8 = 256, and the latter half represents negative values
+		// unpack
+		let a = x / (p_1 as u64);
+		let b = x % (p_1 as u64);
+		let sa: i64 = if a < p_1 / 2 { a as i64 } else { a as i64 - p_1 as i64 }; // taking mod centered around 0 wrt p_1 to ensure that we get the correct values as they were encoded that way.
+		let sb: i64 = if b < p_1 / 2 { b as i64 } else { b as i64 - p_1 as i64 };
+		
+		let m = sa.max(sb);
+		m.rem_euclid(p as i64) as u64
+	},
+);
+\end{minted}
 
 \chapter{References}
 \begin{itemize}

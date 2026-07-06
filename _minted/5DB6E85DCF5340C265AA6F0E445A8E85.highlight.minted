@@ -1,0 +1,23 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} T generation}
+\PYG{c+c1}{\PYGZsh{} generating the polynomial}
+\PYG{n}{tx\PYGZus{}coeffs} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{n}{config}\PYG{o}{.}\PYG{n}{N}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n}{np}\PYG{o}{.}\PYG{n}{int32}\PYG{p}{)}
+\PYG{n}{tx\PYGZus{}coeffs}\PYG{p}{[}\PYG{n}{config}\PYG{o}{.}\PYG{n}{N}\PYG{o}{//}\PYG{l+m+mi}{2}\PYG{p}{:]} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}
+\PYG{n}{tx} \PYG{o}{=} \PYG{n}{Polynomial}\PYG{p}{(}\PYG{n}{N}\PYG{o}{=}\PYG{n}{config}\PYG{o}{.}\PYG{n}{N}\PYG{p}{,} \PYG{n}{coeffs}\PYG{o}{=}\PYG{n}{tx\PYGZus{}coeffs}\PYG{p}{)}
+\PYG{c+c1}{\PYGZsh{} encoding tx}
+\PYG{n}{encode\PYGZus{}multiplier} \PYG{o}{=} \PYG{n}{encode\PYGZus{}plaintext}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{lweconfig}\PYG{p}{)}
+\PYG{c+c1}{\PYGZsh{} generating a trivial RLWE polynomial for tx}
+\PYG{n}{tx\PYGZus{}rlwe} \PYG{o}{=} \PYG{n}{create\PYGZus{}trivial\PYGZus{}rlwe\PYGZus{}ciphertext}\PYG{p}{(}\PYG{n}{tx}\PYG{o}{.}\PYG{n}{polynomial\PYGZus{}const\PYGZus{}multiply}\PYG{p}{(}\PYG{n}{encode\PYGZus{}multiplier}\PYG{o}{.}\PYG{n}{m}\PYG{p}{),} \PYG{n}{config}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} bootstrapping function}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{sign\PYGZus{}bootstrap}\PYG{p}{(}\PYG{n}{i}\PYG{p}{:} \PYG{n}{LWECiphertext}\PYG{p}{,} \PYG{n}{bsk}\PYG{p}{:} \PYG{n}{BootstrapKey}\PYG{p}{,} \PYG{n}{tx\PYGZus{}cipher}\PYG{p}{:} \PYG{n}{RLWECiphertext}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function performs PBS which evaluates the sign function. This will return an LWE ciphertext encrypting 0 if the input was negative or 0, 1 otherwise.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{c+c1}{\PYGZsh{} need to implement coeff(0, blindrotate(i, tx\PYGZus{}cipher))}
+	\PYG{c+c1}{\PYGZsh{} blind rotate tx\PYGZus{}cipher}
+	\PYG{n}{rotated\PYGZus{}tx} \PYG{o}{=} \PYG{n}{bsk}\PYG{o}{.}\PYG{n}{blindrotate}\PYG{p}{(}\PYG{n}{tx\PYGZus{}cipher}\PYG{p}{,} \PYG{n}{i}\PYG{p}{)}
+	\PYG{c+c1}{\PYGZsh{} extract the 0th coefficient}
+	\PYG{n}{coeff\PYGZus{}lwe} \PYG{o}{=} \PYG{n}{extract\PYGZus{}sample}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{rotated\PYGZus{}tx}\PYG{p}{)}
+	\PYG{k}{return} \PYG{n}{coeff\PYGZus{}lwe}
+\end{MintedVerbatim}
