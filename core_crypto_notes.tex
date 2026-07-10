@@ -2172,6 +2172,88 @@ let max_accumulator: GlweCiphertextOwned<u64> = generate_programmable_bootstrap_
 );
 \end{minted}
 
+\chapter{Max from a TFHE encrypted array}
+In this chapter, Im exploring ways to find max from an array of LWE ciphertexts, to use for the TRF model project. I will be trying to find ways to find argmax/max out of an array. This will include implementing relevant research papers, using sorting algorithms etc, and comparing their speeds.
+\section{A non-comparison oblivious sort and its application to private	k-NN}
+This \hyperref[ref:paper_comp_sort]{paper} implements a sorting algorithm for sorting a list of LWE ciphertexts that are 'packed' into an RLWE ciphertext by an operation called as \textbf{P}ublic \textbf{F}unctional \textbf{K}ey \textbf{S}witching (\textbf{PFKS}). Additioanlly, it also extends it by using the developed sorting algorithm to applications in k Nearest Neighbors by finding the k smallest elements from a list of LWE ciphertexts. For the sorting algorithm, the paper uses something called as \textbf{Counting sort}, which is a sorting algorithm that is not based on the methods that use comparisons. The benefit of this, alongside it not using comparisons is that instead of the worst case O(n log n) complexity, it has a worst case complexity of O(n + k) (n: input size; k: range of values). The authors of this paper have provided the code for the algorithm they propose in \hyperref[ref:paper_comp_sort-code]{this} github repository.
+\begin{figure} [H]
+	\centering
+	\includegraphics[width=0.5\linewidth]{counting_sort_algo}
+	\caption{Image taken from \hyperref[ref:paper_comp_sort]{the paper}}
+	\label{fig:countingsortalgo}
+\end{figure}\newpage
+Cleartext implementation of the Counting sort:
+\begin{minted}[
+	fontsize=\small,
+	frame=single,
+	framesep=3mm,
+	bgcolor=bg
+	]{python}
+def counting_sort(a, rng):
+	'''
+	This function implements the counting sort. It takes as input the array a (which is assumed to only have positive values), and a rng (range), which is the 'length-of-the-range' from where the values in a come from.
+	'''
+	# build the count array
+	C = np.zeros(shape=rng, dtype=int)
+	for i in range(a.shape[0]):
+		mi = a[i]
+		C[mi] = C[mi] + 1
+	
+	# calculating the running sum
+	for i in range(1, C.shape[0]):
+		C[i] = C[i] + C[i-1]
+	
+	# reconstructing the sorted array
+	R = np.zeros(a.shape[0], dtype=int)
+	for i in range(a.shape[0]-1, -1, -1):
+		mi = a[i]
+		C[mi] = C[mi] - 1
+		R[C[mi]] = mi
+	
+	return R
+\end{minted}
+\subsection{Blind Counting Sort}
+The blind counting sort is counting sort implemented for ciphertexts. The way it works is that works on a RLWE ciphertext that contains the numbers you want to sort as coefficients, which are then sorted by changing the positions of the coefficients in the RLWE ciphertext, the paper calls this RLWE ciphertext a LUT (Lookup Table). However, this is something im a little iffy about doing because first, Ive seen LUT mostly being used when talking about PBS, and second, LUT in PBS is trivially encrypted, while here, it may or may not be the case (most likely it isnt). So to avoid this confusion/inconsistency in the document, Im going to use RLWE and not LUT. The paper implements the following 'access' methods on which the blind sorting algorithm is built.
+\subsubsection{Blind Array Access (BAA)}
+Blind Array Access allows one to access a coeffcient at a specific position in the RLWE ciphertext. This is done the same way it was being done in PBS, you first rotate the ciphertext such that the coefficient that you want is in the front, and then use the SampleExtract method to extract the 0th coefficent. This is the Blind reading operation.
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.5\linewidth]{counting_sort_BAA}
+	\caption{Image taken from \hyperref[ref:paper_comp_sort]{the paper}}
+	\label{fig:countingsortbaa}
+\end{figure}
+
+\subsubsection{Blind Array Add (BAAdd)}
+Blind Array Add is the blind writing operation. Given the RLWE ciphertext, this operation adds an LWE ciphertext to a specific coefficient of the RLWE ciphertext that is also provided.
+\begin{figure} [H]
+	\centering
+	\includegraphics[width=0.5\linewidth]{counting_sort_BAAdd}
+	\caption{Image taken from \hyperref[ref:paper_comp_sort]{the paper}}
+	\label{fig:countingsortbaadd}
+\end{figure}
+The blind counting sort then uses the operations defined above to then sort the coefficients of the RLWE ciphertext.  It basically just mimics the cleartext algortihm except that it uses the respective blind methods.
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.5\linewidth]{blind_counting_sort}
+	\caption{Image taken from \hyperref[ref:paper_comp_sort]{the paper}.}
+	\label{fig:blindcountingsort}
+\end{figure}
+
+\subsection{Blind Top-k}
+The Blind-top k finds the k smallest values from the given set of LWE Ciphertexts. To do so, it uses the blind counting sort algorithm, and then obtains the first k elements. However, in case the sequence length is longer than the processing limit of blind counting sort (which is dictated by the plaintext modulus), the sequence is split and a tournament based method of the latter method is used.
+
+\subsection{How to use this paper to find max}
+The counting sort sorts the coefficients in the increasing order. A BlindRotate coupled with a SampleExtract (essentially the BAA) operation can be used to then get the last coefficient. However, there is a problem which may or may not be a deal-breaker for this approach. Traditionally, counting sort only works with positive integers (integers is okay, but only positive is not), atleast in cleartext version. The blind counting sort also seems to work only with unsigned (only positive) integers, the way its implemented. However, it might still be possible to work with this by offsetting the negative values to positive (essentially encoding them such that they loop around the plaintext modulus value), and then after performing the sorting operation, we might need to rotate them by (maybe) p/2 and that should work.
+
+\subsection{Current Status}:
+\begin{itemize}
+	\item I am now able to run both the blind sort and blind top-k algorithms. [DONE]
+	\item I need to compare the runtime of the current approach (iteratively finding max) and the runtime of this algorithm for finding max. [In Progress]
+	\item Ensure that the 'trick' to make it work with negative numbers works. [Not Started]
+\end{itemize}
+
+
+% --- REFERENCES ---
 \chapter{References}
 \begin{itemize}
   \item \href{https://docs.zama.org/tfhe-rs/references/core-crypto-api/tutorial}{Core-crypto - TFHE-rs}
@@ -2179,6 +2261,8 @@ let max_accumulator: GlweCiphertextOwned<u64> = generate_programmable_bootstrap_
   \item \href{https://github.com/zama-ai/tfhe-rs-handbook}{The TFHE-rs Handbook.(Read until the PBS section, it describes a lot of other stuff too.)} \label{ref:handbook}
    \item \href{https://docs.zama.org/tfhe-rs/explanations/tfhe-deep-dive}{TFHE-rs's blog series: TFHE Deep Dive}
    \item \href{https://hal.science/hal-04121360/document}{Hitchhiker's Guide to the TFHE Scheme (havent gone through yet)}.
+   \item \href{https://eprint.iacr.org/2024/1894.pdf}{A non-comparison oblivious sort and its application to private k-NN} \label{ref:paper_comp_sort}
+   \item \href{https://github.com/sofianeazogagh/revoLUT}{CODE: A non-comparison oblivious sort and its application to private k-NN} \label{ref:paper_comp_sort-code}
 \end{itemize}
 
 \end{document}

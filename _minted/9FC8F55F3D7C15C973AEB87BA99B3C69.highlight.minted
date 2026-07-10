@@ -1,0 +1,24 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{counting\PYGZus{}sort}\PYG{p}{(}\PYG{n}{a}\PYG{p}{,} \PYG{n}{rng}\PYG{p}{):}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+\PYG{l+s+sd}{	This function implements the counting sort. It takes as input the array a (which is assumed to only have positive values), and a rng (range), which is the \PYGZsq{}length\PYGZhy{}of\PYGZhy{}the\PYGZhy{}range\PYGZsq{} from where the values in a come from.}
+\PYG{l+s+sd}{	\PYGZsq{}\PYGZsq{}\PYGZsq{}}
+	\PYG{c+c1}{\PYGZsh{} build the count array}
+	\PYG{n}{C} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{n}{shape}\PYG{o}{=}\PYG{n}{rng}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{int}\PYG{p}{)}
+	\PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{a}\PYG{o}{.}\PYG{n}{shape}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]):}
+		\PYG{n}{mi} \PYG{o}{=} \PYG{n}{a}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}
+		\PYG{n}{C}\PYG{p}{[}\PYG{n}{mi}\PYG{p}{]} \PYG{o}{=} \PYG{n}{C}\PYG{p}{[}\PYG{n}{mi}\PYG{p}{]} \PYG{o}{+} \PYG{l+m+mi}{1}
+	
+	\PYG{c+c1}{\PYGZsh{} calculating the running sum}
+	\PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{C}\PYG{o}{.}\PYG{n}{shape}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]):}
+		\PYG{n}{C}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{C}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+} \PYG{n}{C}\PYG{p}{[}\PYG{n}{i}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]}
+	
+	\PYG{c+c1}{\PYGZsh{} reconstructing the sorted array}
+	\PYG{n}{R} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{zeros}\PYG{p}{(}\PYG{n}{a}\PYG{o}{.}\PYG{n}{shape}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{int}\PYG{p}{)}
+	\PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{a}\PYG{o}{.}\PYG{n}{shape}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{):}
+		\PYG{n}{mi} \PYG{o}{=} \PYG{n}{a}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]}
+		\PYG{n}{C}\PYG{p}{[}\PYG{n}{mi}\PYG{p}{]} \PYG{o}{=} \PYG{n}{C}\PYG{p}{[}\PYG{n}{mi}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}
+		\PYG{n}{R}\PYG{p}{[}\PYG{n}{C}\PYG{p}{[}\PYG{n}{mi}\PYG{p}{]]} \PYG{o}{=} \PYG{n}{mi}
+	
+	\PYG{k}{return} \PYG{n}{R}
+\end{MintedVerbatim}
