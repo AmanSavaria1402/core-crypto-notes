@@ -2245,11 +2245,42 @@ The Blind-top k finds the k smallest values from the given set of LWE Ciphertext
 \subsection{How to use this paper to find max}
 The counting sort sorts the coefficients in the increasing order. A BlindRotate coupled with a SampleExtract (essentially the BAA) operation can be used to then get the last coefficient. However, there is a problem which may or may not be a deal-breaker for this approach. Traditionally, counting sort only works with positive integers (integers is okay, but only positive is not), atleast in cleartext version. The blind counting sort also seems to work only with unsigned (only positive) integers, the way its implemented. However, it might still be possible to work with this by offsetting the negative values to positive (essentially encoding them such that they loop around the plaintext modulus value), and then after performing the sorting operation, we might need to rotate them by (maybe) p/2 and that should work.
 
-\subsection{Current Status}:
+\subsection{Runtime Comparison}
+The runtime for calculating max for different approaches was checked. Experiment characteristics are the following:
+\begin{itemize}
+	\item The maximum value was chosen among 16 values.
+	\item The code was run on local machine (16GB RAM, R9 5900HS).
+	\item No rayon based parallelization was used in either of the methods (except the ones that TFHE does internally).
+	\item  The max operation was executed 100 times with each method and the runtimes for each run were recorded.
+\end{itemize}
+
+The following approaches were compared:
+\begin{itemize}
+	\item \textbf{O($n^2$) max:} Each element was compared with each other to find the maximum element. This approach is referred to as the \textit{TFHE-native} approach as it uses the native tfhe-rs methods available to calculate the maximum.
+	\item \textbf{Couting Sort based max: } The paper's blind counting sort is used to find the max from the same array. This approach is referred to as the \textit{paper based} approach.
+\end{itemize}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.5\linewidth]{figures/max-runtime-plot}
+	\caption{Runtime Comparison Boxplot}
+	\label{fig:runtime-boxplot}
+\end{figure}
+
+\begin{displaymath}
+	\begin{array}{|c|c|}
+		\hline
+		\text{Approach} & \text{Mean Runtime (sec)} \\ \hline
+		\text{TFHE-rs Native} & 4.12 \\ \hline
+		\text{Counting Sort Based} & 1.35  \\ \hline
+	\end{array}
+\end{displaymath}
+
+\section{Current Status}
 \begin{itemize}
 	\item I am now able to run both the blind sort and blind top-k algorithms. [DONE]
-	\item I need to compare the runtime of the current approach (iteratively finding max) and the runtime of this algorithm for finding max. [In Progress]
-	\item Ensure that the 'trick' to make it work with negative numbers works. [Not Started]
+	\item I need to compare the runtime of the current approach (iteratively finding max) and the runtime of this algorithm for finding max. [DONE]
+	\item Ensure that the 'trick' to make it work with negative numbers works. [In Progress]
 \end{itemize}
 
 
