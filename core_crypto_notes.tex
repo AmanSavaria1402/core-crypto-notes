@@ -2,6 +2,7 @@
 \usepackage{graphicx} % Required for inserting images
 \usepackage{hyperref}
 \usepackage{amsfonts}
+\usepackage{subcaption}
 \usepackage{amsmath}
 \usepackage{float}
 \usepackage{listings}
@@ -2294,6 +2295,102 @@ The following approaches were compared:
    \item \href{https://hal.science/hal-04121360/document}{Hitchhiker's Guide to the TFHE Scheme (havent gone through yet)}.
    \item \href{https://eprint.iacr.org/2024/1894.pdf}{A non-comparison oblivious sort and its application to private k-NN} \label{ref:paper_comp_sort}
    \item \href{https://github.com/sofianeazogagh/revoLUT}{CODE: A non-comparison oblivious sort and its application to private k-NN} \label{ref:paper_comp_sort-code}
+   \item \href{https://docs.zama.org/concrete}{Concrete Library} \label{ref:concrete-library}
+   \item \href{https://github.com/malb/lattice-estimator}{Lattice-estimator} \label{ref:lattice-estimator}
 \end{itemize}
+
+\clearpage
+\begin{center}
+	\vspace*{\fill}
+	{\huge \textbf{APPENDIX}}
+	\vspace*{\fill}
+\end{center}
+\clearpage
+
+\chapter{How does concrete work? Why are the keysizes so large?}
+\section{How does concrete work?}
+\hyperref[ref:concrete-library]{Concrete}, just like tfhe-rs, is a library (but in python) created by ZAMA for TFHE computations. However, it is a much higher level library that decides a lot of things for you, so you only need to focus on the actual TFHE computation. The concrete-python library is merely a frontend/API for the original concrete compiler, which was developed by zama. The compiler does all the calculation, however, it accepts input in \href{https://mlir.llvm.org/}{MLIR}. To make it easier to work with, the python library was created. The library takes python code, which is then converted to MLIR codes and using the codes, the compiler creates the FHE circuits which finally perform the computation.
+\begin{figure} [H]
+	\centering
+	\includegraphics[width=0.7\linewidth]{figures/concrete-architecture}
+	\caption{Concrete Architetcute. Taken from \href{https://www.zama.org/post/the-architecture-of-concrete-zama-fully-homomorphic-encryption-compiler-leveraging-mlir}{this} blog by ZAMA.}
+	\label{fig:concrete-architecture}
+\end{figure}
+
+\subsection{Parameter Selection}
+One of the most important things to do when working with FHE (TFHE) is selecting the parameters such as $\sigma$, N, p, q, etc. These parameter values determine a lot of very important things, such as ;
+\begin{itemize}
+	\item Security Level of the encryption.
+	\item Runtimes of arithmetic and PBS operations.
+\end{itemize}
+Here, unlike other libraries, the parameter selection is done automatically by the library. The parameters are selected such that they are secure against all possible attacks, and maintain a specific security level (for example, 128 bit). To do so, the \hyperref[ref:lattice-estimator]{lattice-estimator} tool is used, aiming for a specific security level $\lambda$.\newline\newline
+Workflow of parameter selection:
+\begin{itemize}
+	\item Data Acquisition: For a given value $(n, q = 2^{64}, \sigma)$, raw data is obtained from lattice estimator and the corresponding security level $\lambda$. Then, change the value of $\sigma$ until the desired security level $\lambda_{target}$ is obtained. This is done for several values of n.
+	\item Model Training for a given  $\lambda_{target}$: Since we now have many sets of $(n, q=2^{64}, \sigma)$ for the specified level, a model is fit on this raw data to find $\sigma$ as a function of n.
+	\item Model Verification: Before using the parameters given by a model, they are verified with lattice estimator to ensure that they achieve the required security level before proceeding with them.
+\end{itemize}
+
+\section{Bit-width, Multi precsion and Multi parameters}
+The bit-witdh (or the plaintext modulus), is another important parameter. The bit-width has a big impact on the runtime of any circuit, with lower values having faster runtimes and higher values having relatively lower runtimes. This too, however, is chosen by the library based on a few things and settings. Imagine a circuit implementing and evaluating $x^2 + y$, with them having the following ranges:
+\begin{figure} [H]
+	\centering
+	\includegraphics[width=1.0\linewidth]{figures/circuit-example}
+	\caption{Graph/circuit representation of $x^2+y$. Taken from \href{https://docs.zama.org/concrete/compilation/key-related-options-for-faster-execution/multi_precision}{concrete documentation}.}
+	\label{fig:circuit-example}
+\end{figure}
+Turning \textbf{multi-precision} on, allows the library to use the lowest possible bit-widths for inputs of each operation in the above (or any, for that matter) circuit.  Which results in the following bit-widths:
+\begin{figure} [H]
+	\centering
+	\includegraphics[width=1.0\linewidth]{figures/circuit-example-final-bitwidths}
+	\caption{Final bit widths of the above graph.}
+	\label{fig:circuit-example-final-bitwidths}
+\end{figure}
+The benefit of using the smallest possible bit-width is that it decreases runtimes as you are only using the smallest possible bit-width for an operation. This is where \textbf{multi-parameter} comes in. Since each operation is (potentially) using different parameters, you need to have different bootstrapping keys for each (wherever bootstrapping is being used), and also, to change an encrypted ciphertext from one parameter set to another, you also need keyswitch keys. Turning multi-parameter on allows the libary to do this. However, these keys are relatively large, and since there will be many such keys (especially for larger circuits), these sizes stack up, resulting in sometimes huge overall keysizes (in the order of tens of GBs). You can turn multi-parameter off, which could potentially reduce the overall sizes of the keys since there is just one key now. The bit-width used will be the one corresponding to the operation that has the largest range. Additionally, this can potentially increase the runtime as well.
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[b]{0.48\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{figures/multi-parameter-on}
+		\caption{Multi Parameter: ON}
+		\label{fig:multi-parameter-on}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.48\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{figures/multi-parameter-off}
+		\caption{Multi Parameter: OFF}
+		\label{fig:multi-parameter-off}
+	\end{subfigure}
+	\caption{Effects of multi-parameter value on keysizes.}
+	\label{fig:multi-parameter-combined}
+\end{figure}
+
+\chapter{TFHE-rs and Concrete-ML MLP Runtime}
+\section{TFHE-rs}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\linewidth]{figures/tfhe-rs-mlp-runtime}
+	\caption{TFHE-rs runtime for MLP}
+	\label{fig:tfhe-rs-mlp-runtime}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.5\linewidth]{figures/layer-runtime-pie}
+	\caption{Pie-chart for layer runtimes}
+	\label{fig:layer-runtime-pie}
+\end{figure}
+
+\section{Concrete-ml Runtime}
+\begin{displaymath}
+	\begin{array}{|c|c|c|}
+		\hline
+		\text{weight bit-width} & \text{identity bit-width} & \text{inference time/datapoint (in sec)}\\ \hline
+		3 & 3 & 2,67 \\ \hline
+		4 & 4 & 37.71 \\ \hline
+		5 & 5 & 60.61 \\ \hline
+	\end{array}
+\end{displaymath}
+
 
 \end{document}
